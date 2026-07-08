@@ -42,11 +42,8 @@
                         </div>
                     </form>
 
-                    <!-- New Link Added -->
                     <div class="mt-3">
-                        <small>Don't have an account? 
-                            <a href="index.html" class="text-primary fw-bold">Make a free account</a>
-                        </small>
+                        <small>Don't have an account? <a href="index.html" class="text-primary fw-bold">Make a free account</a></small>
                     </div>
                 </div>
             </div>
@@ -55,7 +52,7 @@
 </div>
 
 <script>
-// Your login script (same as before)
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBy431WZJp9k4DLL8AclwqU8G3QhVKJ3Ws",
   authDomain: "paulyroom-dc99e.firebaseapp.com",
@@ -68,10 +65,50 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ... your login code ...
-
 $('#login-form').on('submit', async function(e) {
-    // your login logic
+    e.preventDefault();
+
+    const username = $('#username-input').val().trim();
+    const password = $('#password-input').val();
+    const btn = $('#login-btn');
+
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Logging in...');
+
+    try {
+        const snap = await db.collection("usernames").where("lowercase", "==", username.toLowerCase()).get();
+        if (snap.empty) throw new Error("Username not found");
+
+        const userData = snap.docs[0].data();
+        const userDoc = await db.collection("users").doc(userData.uid).get();
+        if (!userDoc.exists) throw new Error("Account not found");
+
+        const user = userDoc.data();
+
+        if (user.password !== password) throw new Error("Incorrect password");
+
+        btn.html('<i class="fas fa-check"></i> Success! Redirecting...');
+
+        setTimeout(() => {
+            window.location.href = "Home.html";
+        }, 1200);
+
+    } catch (err) {
+        alert(err.message);
+        btn.prop('disabled', false).text('Login');
+    }
+});
+
+// Password Toggle
+$('#toggle-password').on('click', function() {
+    const pass = $('#password-input');
+    const icon = $('#eye-icon');
+    if (pass.attr('type') === 'password') {
+        pass.attr('type', 'text');
+        icon.removeClass('fa-eye-slash').addClass('fa-eye');
+    } else {
+        pass.attr('type', 'password');
+        icon.removeClass('fa-eye').addClass('fa-eye-slash');
+    }
 });
 </script>
 
