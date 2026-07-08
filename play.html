@@ -1,1 +1,404 @@
+<!DOCTYPE html>
+<html class="">
+<head>
+    <script>
+    let cdn = "https://cdn.bopimo.com";
+    function localFallback() {
+        document.querySelectorAll(`script[src^="${cdn}"]`).forEach((script) => {
+            let url = script.getAttribute('src')
+            let path = new URL(url).pathname.split('static')[1]
+            var scriptEl = document.createElement('script');
+            scriptEl.src = path;
+            document.head.appendChild(scriptEl);
+        })
+    }
+    function localCssFallback() {
+        document.querySelectorAll(`link[href^="${cdn}"]`).forEach((style) => {
+            let url = style.getAttribute('href')
+            let path = new URL(url).pathname.split('static')[1]
+            var link = document.createElement('link');
+            link.href = path
+            link.rel = 'stylesheet'
+            document.head.appendChild(link);
+        })
+    }
+    function localFallbacks() {
+        localFallback()
+        localCssFallback()
+    }
+    function cdnCheck() {
+        window.Vue || (localFallbacks())
+    }
+</script> 
 
+<link rel="stylesheet" href="https://cdn.bopimo.com/static/dist/css/main.b1e8e2d33d08a4745e862f94caa902f5.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<script src="https://cdn.bopimo.com/static/dist/js/manifest.e4e0a03ba355db6dd283217de1fee883.js" crossorigin="anonymous" defer=""></script>
+<script src="https://cdn.bopimo.com/static/dist/js/vendor.620d5822184d7b9e3effd43cd040c482.js" crossorigin="anonymous" defer=""></script>
+<script src="https://cdn.bopimo.com/static/dist/js/babylonjs.722a531baab17568a354a9150d9c067e.js" crossorigin="anonymous" defer=""></script>
+<script src="https://cdn.bopimo.com/static/dist/js/main.c97b6336e39bb09a5d7cecfcad4886ad.js" crossorigin="anonymous" onerror="cdnCheck()" defer=""></script>
+
+<style>
+    :root { --accent: #ff8800; }
+    .username-text, .username { color: var(--accent) !important; }
+    .bg-icon { background: var(--accent) !important; }
+    .shop-card.purple { border-color: var(--accent) !important; }
+    
+    /* Layout Elements */
+    .game-section-title { font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #eaeaea; padding-bottom: 5px; }
+    .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+    .game-card { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #fff; transition: transform 0.2s; }
+    .game-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .game-thumb { width: 100%; height: 120px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #ccc; position: relative; }
+    .game-meta { padding: 10px; }
+    .game-title { font-weight: bold; font-size: 1.1rem; color: #333; margin-bottom: 2px; }
+    .game-creator { font-size: 0.85rem; color: #666; }
+    .upload-box { background: #fff; border: 2px dashed #ccc; border-radius: 6px; padding: 20px; text-align: center; margin-bottom: 30px; position: relative; }
+    .btn-accent { background: var(--accent); color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .btn-accent:hover { filter: brightness(0.9); }
+    .btn-accent:disabled { background: #ccc !important; cursor: not-allowed; }
+    .progress-container { width: 100%; background: #eee; border-radius: 4px; margin-top: 10px; display: none; overflow: hidden;}
+    .progress-bar { height: 10px; background: var(--accent); width: 0%; transition: width 0.1s linear; }
+    .error-msg { color: #d9534f; font-size: 0.9rem; margin-top: 5px; display: none; font-weight: bold; }
+
+    /* Security UI Modifiers */
+    .virus-alert-box { border: 3px solid #d9534f !important; background: #fdf2f2 !important; }
+    .red-x-indicator { display: none; font-size: 5rem; color: #d9534f; margin-bottom: 10px; animation: popX 0.3s ease-in-out; }
+    @keyframes popX { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+</style>
+
+<title>Games - PaulyRoom</title>
+</head>
+<body>
+    <div id="app" class="content">
+        <nav class="navbar">
+            <div class="container">
+                <ul class="left">
+                    <li class="logo"><a href="/dashboard"><img src="https://i.postimg.cc/BZ8GGxGg/Chat-GPT-Image-Jun-16-2026-07-28-59-PM-removebg-preview.png"></a> <div onclick="toggleNavbar()" class="hamburger-menu"><i class="fas fa-bars"></i></div></li> 
+                    <li><a href="/play">Play</a></li> 
+                    <li><a href="/shop">Shop</a></li> 
+                    <li><a href="/forums/">Forums</a></li> 
+                    <li><a href="/users">Users</a></li> 
+                    <li><a href="/download">Download</a></li> 
+                    <li><a href="/upgrade">Upgrade</a></li>
+                </ul> 
+                <ul class="right">
+                    <li class="user-coins unread"><a id="nav-buddies-link" href="https://www.bopimo.com/users/JaneDoe/buddies/incoming"><div class="flex-align-middle v-popper--has-tooltip"><i class="fas fa-users"></i> <div>0</div></div></a></li> 
+                    <li class="user-coins unread"><a href="/chat/"><div class="flex-align-middle v-popper--has-tooltip"><i class="fas fa-envelope"></i> <div id="unread">0</div></div></a></li> 
+                    <li class="user-coins unread coins"><a href="https://www.bopimo.com/transactions"><div class="flex-align-middle v-popper--has-tooltip"><div class="b-coin"></div> <div>0</div></div></a></li> 
+                    <li onclick="toggleDropdown()" class="user-navbar">
+                        <div>
+                            <span class="username username-medium">
+                                <span id="navbar-username" class="username-text">JaneDoe</span> 
+                                <span class="bg-icon spirit-digits-1 spirit-0">1</span>
+                            </span>
+                        </div> 
+                        <div class="user-image"><img src="https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png" alt=""></div> 
+                        <div class="dropdown-icon"><i class="fas fa-chevron-down"></i></div>
+                    </li>
+                </ul>
+            </div>
+        </nav> 
+        
+        <div class="nav-push"></div> 
+        
+        <div class="container">
+            <div class="banner banner-warning">PaulyRoom is under traffic and in maintenance Which can do slowdowns <a href="/email/resend">We're busy fixing everything</a>.</div> 
+            
+            <div class="col-md-12 col-xs-12">
+                
+                <div class="upload-box" id="upload-panel">
+                    <div class="red-x-indicator" id="virus-x"><i class="fas fa-times-circle"></i></div>
+                    
+                    <h3 style="margin-top:0; font-weight:bold;" id="upload-panel-title">Create a Game</h3>
+                    <p class="text-muted" id="upload-panel-desc">Upload your PaulyRoom environment configuration file to publish it to the community.</p>
+                    
+                    <form id="game-upload-form" onsubmit="handleGameSubmit(event)" style="max-width: 500px; margin: 0 auto; text-align: left;">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label style="font-weight: bold;">Game Title</label>
+                            <input type="text" id="game-title" class="form-control" placeholder="Enter game name..." required style="width:100%; padding:6px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label style="font-weight: bold;">Select Build File (.bop, .bopjson)</label>
+                            <input type="file" id="game-file" accept=".bop,.bopjson" required style="display:block; margin-top:5px;">
+                            <div id="upload-error" class="error-msg"></div>
+                        </div>
+                        <button type="submit" class="btn-accent" id="submit-btn">Upload & Publish</button>
+                    </form>
+                    
+                    <div id="queue-status" style="display:none; margin-top: 15px; max-width:500px; margin-left:auto; margin-right:auto; text-align:left;">
+                        <strong style="color:var(--accent);">Processing File Assets... <span id="timer-text">10s</span> remaining</strong>
+                        <div class="progress-container" id="prog-container">
+                            <div class="progress-bar" id="prog-bar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="game-section-title">Discover Games</h2>
+                <div class="game-grid" id="games-display-container">
+                    <div class="game-card">
+                        <div class="game-thumb"><i class="fas fa-cubes"></i></div>
+                        <div class="game-meta">
+                            <div class="game-title">Crossroads Classic</div>
+                            <div class="game-creator">by PaulyAdmin</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Firebase Setup Core
+    const firebaseConfig = {
+      apiKey: "AIzaSyBy431WZJp9k4DLL8AclwqU8G3QhVKJ3Ws",
+      authDomain: "paulyroom-dc99e.firebaseapp.com",
+      projectId: "paulyroom-dc99e",
+      storageBucket: "paulyroom-dc99e.firebasestorage.app",
+      messagingSenderId: "676053619588",
+      appId: "1:676053619588:web:2abffee0cf9295031303d1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let currentSessionUser = "JaneDoe";
+
+    document.addEventListener("DOMContentLoaded", function() {
+        let discoveredUsername = null;
+
+        if (localStorage.getItem("username")) {
+            discoveredUsername = localStorage.getItem("username");
+        } 
+        else if (window.Bopimo && window.Bopimo.user && window.Bopimo.user.username) {
+            discoveredUsername = window.Bopimo.user.username;
+        }
+
+        if (discoveredUsername) {
+            currentSessionUser = discoveredUsername;
+            
+            const navUser = document.getElementById("navbar-username");
+            if (navUser) navUser.textContent = currentSessionUser;
+
+            const buddiesLink = document.getElementById("nav-buddies-link");
+            if (buddiesLink) {
+                buddiesLink.setAttribute("href", `https://www.bopimo.com/users/${currentSessionUser}/buddies/incoming`);
+            }
+        }
+        
+        checkUserSanctionStatus();
+        loadFirebaseGames();
+    });
+
+    async function checkUserSanctionStatus() {
+        if(!currentSessionUser || currentSessionUser === "Guest") return;
+        
+        try {
+            const doc = await db.collection("moderation").doc(currentSessionUser.toLowerCase()).get();
+            if(doc.exists) {
+                const data = doc.data();
+                if(data.status === "Terminated") {
+                    triggerAccountTerminationView("Your account has been permanently terminated for repeatedly spreading malicious game extensions.");
+                } else if(data.status === "Banned") {
+                    const dynamicExpiration = data.expiresAt.toDate();
+                    if(new Date() < dynamicExpiration) {
+                        triggerAccountBanView(`Your creation privileges are restricted. You are banned until: ${dynamicExpiration.toLocaleString()}`);
+                    } else {
+                        await db.collection("moderation").doc(currentSessionUser.toLowerCase()).update({ status: "Active" });
+                    }
+                }
+            }
+        } catch(e) { console.error("Moderation fetch err: ", e); }
+    }
+
+    function loadFirebaseGames() {
+        db.collection("games").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+            const container = document.getElementById("games-display-container");
+            const baseCards = container.querySelectorAll('.game-card:not(.custom-uploaded)');
+            container.innerHTML = "";
+            baseCards.forEach(card => container.appendChild(card));
+
+            snapshot.forEach(doc => {
+                const game = doc.data();
+                const card = document.createElement("div");
+                card.className = "game-card custom-uploaded";
+                // The creator variable from the database object renders directly into the UI card
+                card.innerHTML = `
+                    <div class="game-thumb" style="background:#fff2e6;"><i class="fas fa-gamepad" style="color:var(--accent);"></i></div>
+                    <div class="game-meta">
+                        <div class="game-title">${escapeHTML(game.title)}</div>
+                        <div class="game-creator">by ${escapeHTML(game.creator || "Unknown Creator")}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        });
+    }
+
+    function handleGameSubmit(event) {
+        event.preventDefault();
+        
+        const titleInput = document.getElementById("game-title");
+        const fileInput = document.getElementById("game-file");
+        const errorDiv = document.getElementById("upload-error");
+        const submitBtn = document.getElementById("submit-btn");
+        const queueStatus = document.getElementById("queue-status");
+        const progressBar = document.getElementById("prog-bar");
+        const progressContainer = document.getElementById("prog-container");
+        const timerText = document.getElementById("timer-text");
+
+        errorDiv.style.display = "none";
+        if (!fileInput.files || fileInput.files.length === 0) return;
+        
+        const file = fileInput.files[0];
+        const fileName = file.name;
+        const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+
+        if (fileExtension !== ".bop" && fileExtension !== ".bopjson") {
+            errorDiv.textContent = "Error: Invalid file mapping type. Only .bop and .bopjson constructs allowed.";
+            errorDiv.style.display = "block";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const fileContents = e.target.result.toLowerCase();
+            
+            if (fileContents.includes("virus") || fileContents.includes("exploit") || fileContents.includes("malware") || fileContents.includes("malicious")) {
+                await processInfractionEnforcement();
+                return;
+            }
+
+            submitBtn.disabled = true;
+            queueStatus.style.display = "block";
+            progressContainer.style.display = "block";
+
+            let duration = 10; 
+            let currentTick = 0;
+            progressBar.style.width = "0%";
+            timerText.textContent = duration + "s";
+
+            const interval = setInterval(async () => {
+                currentTick += 0.1;
+                let percentage = (currentTick / duration) * 100;
+                progressBar.style.width = Math.min(percentage, 100) + "%";
+                timerText.textContent = Math.ceil(duration - currentTick) + "s";
+
+                if (currentTick >= duration) {
+                    clearInterval(interval);
+                    
+                    try {
+                        // The user payload profile name gets dynamically saved into Firebase on form submit
+                        await db.collection("games").add({
+                            title: titleInput.value,
+                            creator: currentSessionUser, 
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        titleInput.value = "";
+                        fileInput.value = "";
+                        submitBtn.disabled = false;
+                        queueStatus.style.display = "none";
+                    } catch(err) {
+                        alert("Firebase push failure: " + err.message);
+                        submitBtn.disabled = false;
+                    }
+                }
+            }, 100);
+        };
+        reader.readAsText(file);
+    }
+
+    async function processInfractionEnforcement() {
+        if (!currentSessionUser || currentSessionUser === "Guest") {
+            alert("Threat Vector Blocked! Sign-in requested.");
+            return;
+        }
+
+        const userRef = db.collection("moderation").doc(currentSessionUser.toLowerCase());
+        const doc = await userRef.get();
+
+        if (!doc.exists) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            await userRef.set({
+                username: currentSessionUser,
+                status: "Banned",
+                strikes: 1,
+                expiresAt: tomorrow
+            });
+            triggerVirusInterdictionUI();
+            triggerAccountBanView("Virus detected! Your creation access is disabled. You are banned for 1 day.");
+        } else {
+            const data = doc.data();
+            if (data.strikes >= 1) {
+                await userRef.update({
+                    status: "Terminated",
+                    strikes: data.strikes + 1,
+                    terminatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                triggerVirusInterdictionUI();
+                triggerAccountTerminationView("Threat Vector Recurrence! Your account profile has been terminated.");
+            } else {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                await userRef.update({
+                    status: "Banned",
+                    strikes: 1,
+                    expiresAt: tomorrow
+                });
+                triggerVirusInterdictionUI();
+                triggerAccountBanView("Virus detected! Your creation access is disabled. You are banned for 1 day.");
+            }
+        }
+    }
+
+    function triggerVirusInterdictionUI() {
+        document.getElementById("upload-panel").classList.add("virus-alert-box");
+        document.getElementById("virus-x").style.display = "block";
+        document.getElementById("submit-btn").disabled = true;
+    }
+
+    function triggerAccountBanView(msg) {
+        triggerVirusInterdictionUI();
+        document.getElementById("upload-panel-title").textContent = "Access Revoked";
+        document.getElementById("upload-panel-desc").innerHTML = `<span style="color:#d9534f; font-weight:bold;">${msg}</span>`;
+        document.getElementById("game-upload-form").style.display = "none";
+    }
+
+    function triggerAccountTerminationView(msg) {
+        triggerVirusInterdictionUI();
+        document.getElementById("upload-panel-title").textContent = "Account Terminated";
+        document.getElementById("upload-panel-desc").innerHTML = `<span style="color:#d9534f; font-weight:bold;">${msg}</span>`;
+        document.getElementById("game-upload-form").style.display = "none";
+    }
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+    }
+
+    function toggleDropdown() {
+        var elm = document.getElementsByClassName("navbar-dropdown")[0];
+        var icon = document.getElementsByClassName("dropdown-icon")[0];
+        if (elm) elm.classList.toggle("hidden");
+        if (icon) icon.classList.toggle("up");
+    }
+    
+    function toggleNavbar() {
+        var navbar = document.getElementsByClassName("navbar")[0];
+        if (navbar) navbar.classList.toggle("open");
+    }
+
+    function logout() {
+        localStorage.removeItem("username");
+        window.location.href = "https://paulyroom-pr.github.io/PaulyRoom/index.html";
+    }
+</script>
+</body>
+</html>
