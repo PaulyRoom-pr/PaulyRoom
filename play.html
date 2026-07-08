@@ -60,7 +60,8 @@
     .game-meta { padding: 10px; flex-grow: 1; display: flex; flex-direction: column; }
     .game-title { font-weight: bold; font-size: 1.1rem; color: #333; margin-bottom: 2px; }
     .game-desc-preview { font-size: 0.8rem; color: #777; margin: 4px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.2; }
-    .game-creator { font-size: 0.85rem; color: #666; margin-top: auto; font-weight: 500; }
+    .game-creator { font-size: 0.85rem; color: #666; margin-top: auto; font-weight: 500; display: flex; flex-direction: column; gap: 2px; }
+    .game-date-badge { font-size: 0.72rem; color: #999; font-weight: normal; font-style: italic; }
     
     /* Popup Modal Styles */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
@@ -98,13 +99,13 @@
                     <li><a href="/upgrade">Upgrade</a></li>
                 </ul> 
                 <ul class="right">
-                    <li class="user-coins unread"><a id="nav-buddies-link" href="https://www.bopimo.com/users/JaneDoe/buddies/incoming"><div class="flex-align-middle v-popper--has-tooltip"><i class="fas fa-users"></i> <div>0</div></div></a></li> 
+                    <li class="user-coins unread"><a id="nav-buddies-link" href="#"><div class="flex-align-middle v-popper--has-tooltip"><i class="fas fa-users"></i> <div>0</div></div></a></li> 
                     <li class="user-coins unread"><a href="/chat/"><div class="flex-align-middle v-popper--has-tooltip"><i class="fas fa-envelope"></i> <div id="unread">0</div></div></a></li> 
                     <li class="user-coins unread coins"><a href="https://www.bopimo.com/transactions"><div class="flex-align-middle v-popper--has-tooltip"><div class="b-coin"></div> <div>0</div></div></a></li> 
                     <li onclick="toggleDropdown()" class="user-navbar">
                         <div>
                             <span class="username username-medium">
-                                <span id="navbar-username" class="username-text">JaneDoe</span> 
+                                <span id="navbar-username" class="username-text">Syncing Auth...</span> 
                                 <span class="bg-icon spirit-digits-1 spirit-0">1</span>
                             </span>
                         </div> 
@@ -133,7 +134,10 @@
                         <div class="game-meta">
                             <div class="game-title">Crossroads Classic</div>
                             <div class="game-desc-preview">The ultimate throwback sandbox layout.</div>
-                            <div class="game-creator">by PaulyAdmin</div>
+                            <div class="game-creator">
+                                <span>by PaulyAdmin</span>
+                                <span class="game-date-badge">Created: Jun 16th, 2026</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -195,29 +199,60 @@
     let currentSessionUser = "JaneDoe";
     const defaultGameVisualFallback = "https://i.imgur.com/k6O66a0.png";
 
-    document.addEventListener("DOMContentLoaded", function() {
-        let discoveredUsername = null;
+    // Format helper to convert a JS Date object into a readable string "MMM DDth, YYYY"
+    function generateCleanTimestampString() {
+        const d = new Date();
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        let day = d.getDate();
+        let suffix = "th";
+        if (day === 1 || day === 21 || day === 31) suffix = "st";
+        else if (day === 2 || day === 22) suffix = "nd";
+        else if (day === 3 || day === 23) suffix = "rd";
+        return `${months[d.getMonth()]} ${day}${suffix}, ${d.getFullYear()}`;
+    }
 
-        if (localStorage.getItem("username")) {
-            discoveredUsername = localStorage.getItem("username");
-        } 
-        else if (window.Bopimo && window.Bopimo.user && window.Bopimo.user.username) {
-            discoveredUsername = window.Bopimo.user.username;
-        }
+    function watchForIdentitySynchronization() {
+        let attempts = 0;
+        const identityInterval = setInterval(() => {
+            attempts++;
+            let discoveredUsername = null;
 
-        if (discoveredUsername) {
-            currentSessionUser = discoveredUsername;
-            
-            const navUser = document.getElementById("navbar-username");
-            if (navUser) navUser.textContent = currentSessionUser;
-
-            const buddiesLink = document.getElementById("nav-buddies-link");
-            if (buddiesLink) {
-                buddiesLink.setAttribute("href", `https://www.bopimo.com/users/${currentSessionUser}/buddies/incoming`);
+            if (localStorage.getItem("username") && localStorage.getItem("username").trim() !== "") {
+                discoveredUsername = localStorage.getItem("username").trim();
+            } 
+            else if (window.Bopimo && window.Bopimo.user && window.Bopimo.user.username) {
+                discoveredUsername = window.Bopimo.user.username.trim();
             }
+
+            if (discoveredUsername && discoveredUsername.toLowerCase() !== "guest") {
+                currentSessionUser = discoveredUsername;
+                clearInterval(identityInterval);
+                applyUserIdentityDOM();
+            }
+            
+            if (attempts > 50) {
+                clearInterval(identityInterval);
+                if (currentSessionUser === "JaneDoe" || currentSessionUser === "Syncing Auth...") {
+                    currentSessionUser = localStorage.getItem("username") || "JaneDoe";
+                }
+                applyUserIdentityDOM();
+            }
+        }, 100);
+    }
+
+    function applyUserIdentityDOM() {
+        const navUser = document.getElementById("navbar-username");
+        if (navUser) navUser.textContent = currentSessionUser;
+
+        const buddiesLink = document.getElementById("nav-buddies-link");
+        if (buddiesLink) {
+            buddiesLink.setAttribute("href", `https://www.bopimo.com/users/${currentSessionUser}/buddies/incoming`);
         }
-        
         checkUserSanctionStatus();
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        watchForIdentitySynchronization();
         loadFirebaseGames();
     });
 
@@ -237,7 +272,7 @@
     }
 
     async function checkUserSanctionStatus() {
-        if(!currentSessionUser || currentSessionUser === "Guest") return;
+        if(!currentSessionUser || currentSessionUser === "Guest" || currentSessionUser === "Syncing Auth...") return;
         
         try {
             const doc = await db.collection("moderation").doc(currentSessionUser.toLowerCase()).get();
@@ -272,6 +307,7 @@
                 
                 const gameThumbnail = game.iconUrl || defaultGameVisualFallback;
                 const descriptionText = game.description || "No blueprint description metadata provided.";
+                const dateCreatedString = game.creatorJoinedDate || "Jul 8th, 2026";
 
                 card.innerHTML = `
                     <div class="game-thumb">
@@ -280,7 +316,10 @@
                     <div class="game-meta">
                         <div class="game-title">${escapeHTML(game.title)}</div>
                         <div class="game-desc-preview">${escapeHTML(descriptionText)}</div>
-                        <div class="game-creator">by ${escapeHTML(game.creator || "Unknown Creator")}</div>
+                        <div class="game-creator">
+                            <span>by ${escapeHTML(game.creator || "Unknown Creator")}</span>
+                            <span class="game-date-badge">Created: ${escapeHTML(dateCreatedString)}</span>
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -349,6 +388,7 @@
                             iconUrl: iconInput.value.trim() || null,
                             description: descInput.value.trim() || "",
                             creator: currentSessionUser, 
+                            creatorJoinedDate: generateCleanTimestampString(),
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
 
@@ -371,7 +411,7 @@
     }
 
     async function processInfractionEnforcement() {
-        if (!currentSessionUser || currentSessionUser === "Guest") {
+        if (!currentSessionUser || currentSessionUser === "Guest" || currentSessionUser === "Syncing Auth...") {
             alert("Threat Vector Blocked! Sign-in requested.");
             return;
         }
@@ -416,7 +456,7 @@
     }
 
     function triggerVirusInterdictionUI() {
-        openCreateModal(); // Ensure modal stays open to show block status
+        openCreateModal(); 
         document.getElementById("upload-panel").classList.add("virus-alert-box");
         document.getElementById("virus-x").style.display = "block";
         document.getElementById("submit-btn").disabled = true;
