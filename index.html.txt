@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Signup</title>
+</head>
+
+<body>
+
+<h1>Create Account</h1>
+
+
+<input id="username" placeholder="Username">
+<br><br>
+
+<input id="email" placeholder="Email (optional)">
+<br><br>
+
+<input id="password" type="password" placeholder="Password">
+<br><br>
+
+<input id="confirmPassword" type="password" placeholder="Confirm Password">
+<br><br>
+
+<input id="birthday" type="date">
+<br><br>
+
+<button onclick="signup()">
+Create Account
+</button>
+
+
+<p id="status"></p>
+
+
+
+<script type="module">
+
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
+
+import {
+
+getAuth,
+
+createUserWithEmailAndPassword,
+
+sendEmailVerification
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+
+
+import {
+
+getFirestore,
+
+doc,
+
+setDoc
+
+}
+
+from
+
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+
+
+// YOUR FIREBASE CONFIG
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyBy431WZJp9k4DLL8AclwqU8G3QhVKJ3Ws",
+
+authDomain: "paulyroom-dc99e.firebaseapp.com",
+
+projectId: "paulyroom-dc99e",
+
+storageBucket: "paulyroom-dc99e.firebasestorage.app",
+
+messagingSenderId: "676053619588",
+
+appId: "1:676053619588:web:2abffee0cf9295031303d1",
+
+measurementId: "G-YP6F27NP9B"
+
+};
+
+
+
+// Initialize Firebase
+
+const app = initializeApp(firebaseConfig);
+
+
+const auth = getAuth(app);
+
+
+const db = getFirestore(app);
+
+
+
+
+
+window.signup = async function(){
+
+
+
+const status =
+document.getElementById("status");
+
+
+
+let username =
+document.getElementById("username").value.trim();
+
+
+let email =
+document.getElementById("email").value.trim();
+
+
+let password =
+document.getElementById("password").value;
+
+
+let confirmPassword =
+document.getElementById("confirmPassword").value;
+
+
+let birthday =
+document.getElementById("birthday").value;
+
+
+
+
+try{
+
+
+status.innerHTML="Creating account...";
+
+
+
+if(password !== confirmPassword){
+
+throw new Error(
+"Passwords do not match"
+);
+
+}
+
+
+
+if(username.length < 3){
+
+throw new Error(
+"Username must be at least 3 characters"
+);
+
+}
+
+
+
+
+// Firebase needs email.
+// If user does not add email, create guest email.
+
+let loginEmail=email;
+
+
+
+if(!email){
+
+loginEmail =
+username + "@guest.local";
+
+}
+
+
+
+
+
+// CREATE FIREBASE ACCOUNT
+
+const userCredential =
+await createUserWithEmailAndPassword(
+
+auth,
+
+loginEmail,
+
+password
+
+);
+
+
+
+const user =
+userCredential.user;
+
+
+
+
+// Verify email only when user entered one
+
+if(email){
+
+await sendEmailVerification(user);
+
+}
+
+
+
+
+
+// SAVE USER DATA TO FIRESTORE
+
+await setDoc(
+
+doc(db,"users",user.uid),
+
+{
+
+
+uid:user.uid,
+
+
+username:username,
+
+
+birthday:birthday,
+
+
+email: email || null,
+
+
+avatar:"default.png",
+
+
+createdAt:new Date()
+
+
+}
+
+);
+
+
+
+
+status.innerHTML =
+"Account created! Redirecting...";
+
+
+
+
+// SEND TO HOME AFTER SUCCESS
+
+setTimeout(()=>{
+
+window.location.href="home.html";
+
+},1000);
+
+
+
+}
+
+
+
+catch(error){
+
+
+console.error(error);
+
+
+
+status.innerHTML =
+"Signup failed: " + error.message;
+
+
+
+
+// FAILURE = GUEST MODE
+
+localStorage.setItem(
+"guest",
+"true"
+);
+
+
+
+setTimeout(()=>{
+
+window.location.href="home.html";
+
+},2000);
+
+
+
+}
+
+
+
+}
+
+
+
+</script>
+
+
+</body>
+
+</html>

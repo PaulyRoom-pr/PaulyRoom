@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" class="cc--darkmode">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make account - PaulyRoom</title>
+    <link href="https://cdn.polytoria.com/static/app-DGvpBOdG.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://kit-pro.fontawesome.com/releases/v7.2.0/css/pro.min.css">
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body class="theme-auto">
+
+<div class="auth-container">
+    <div class="auth-background" style="background-image: url('https://cdn.polytoria.com/thumbnails/places/featured/UmOKvsBwGbJ8ccHdmTjMTi05sI6xHfPF.png');"></div>
+
+    <div class="row justify-content-end align-items-center p-lg-5" style="height: 100%;">
+        <div class="col-12" style="max-width:450px">
+            <div class="card mcard auth-form-container">
+                <div class="card-body text-center p-4">
+                    <h4 class="fw-bold mb-2">Join PaulyRoom</h4>
+                    <h6>Create a free account</h6>
+
+                    <form id="register-form">
+                        <input type="hidden" id="dateOfBirth">
+
+                        <div class="input-group has-validation mb-3">
+                            <span class="input-group-text pe-1"><i class="fas fa-user text-muted" id="username-icon"></i></span>
+                            <input type="text" class="form-control" id="username-input" placeholder="Username" required>
+                            <span class="invalid-feedback" id="username-error"></span>
+                        </div>
+
+                        <div class="input-group mb-3">
+                            <span class="input-group-text pe-1"><i class="fas fa-envelope text-muted"></i></span>
+                            <input type="email" class="form-control" id="email-input" placeholder="Email (Optional)">
+                        </div>
+
+                        <div class="input-group mb-3">
+                            <span class="input-group-text pe-1"><i class="fas fa-key text-muted"></i></span>
+                            <input type="password" class="form-control" id="password-input" placeholder="Password" required>
+                        </div>
+
+                        <div class="row mb-3 g-2">
+                            <div class="col-sm-4">
+                                <select class="form-select bg-secondary" id="dob-month" required>
+                                    <option value="" selected disabled>Month</option>
+                                    <option value="01">January</option><option value="02">February</option>
+                                    <option value="03">March</option><option value="04">April</option>
+                                    <option value="05">May</option><option value="06">June</option>
+                                    <option value="07">July</option><option value="08">August</option>
+                                    <option value="09">September</option><option value="10">October</option>
+                                    <option value="11">November</option><option value="12">December</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4">
+                                <select class="form-select bg-secondary" id="dob-day" required>
+                                    <option value="" selected disabled>Day</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4">
+                                <select class="form-select bg-secondary" id="dob-year" required>
+                                    <option value="" selected disabled>Year</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-lg btn-primary" id="register-btn">Sign up</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBy431WZJp9k4DLL8AclwqU8G3QhVKJ3Ws",
+  authDomain: "paulyroom-dc99e.firebaseapp.com",
+  projectId: "paulyroom-dc99e",
+  storageBucket: "paulyroom-dc99e.firebasestorage.app",
+  messagingSenderId: "676053619588",
+  appId: "1:676053619588:web:2abffee0cf9295031303d1"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+async function isUsernameAvailable(username) {
+    const lower = username.toLowerCase().trim();
+    if (lower.length < 3 || lower.length > 20) return { available: false, msg: "Username must be 3-20 characters" };
+    if (!/^[a-zA-Z0-9]+$/.test(lower)) return { available: false, msg: "Only letters and numbers" };
+
+    const snap = await db.collection("usernames").where("lowercase", "==", lower).get();
+    return { available: snap.empty, msg: snap.empty ? "" : "Username taken" };
+}
+
+$('#register-form').on('submit', async function(e) {
+    e.preventDefault();
+
+    const username = $('#username-input').val().trim();
+    const email = $('#email-input').val().trim();
+    const password = $('#password-input').val();
+    const dob = $('#dateOfBirth').val();
+
+    if (!username || !password || !dob) {
+        alert("Username, Password and Birthday are required!");
+        return;
+    }
+
+    const btn = $('#register-btn');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Creating Account...');
+
+    try {
+        const check = await isUsernameAvailable(username);
+        if (!check.available) throw new Error(check.msg);
+
+        const lowerUsername = username.toLowerCase();
+
+        // Get signup location
+        let location = "Unknown Location";
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            const data = await res.json();
+            location = `${data.city || ''}, ${data.country_name || ''}`;
+        } catch (e) {}
+
+        const uid = "user_" + Date.now();
+
+        // Store data in Firestore
+        await db.collection("usernames").doc(lowerUsername).set({
+            username: username,
+            lowercase: lowerUsername,
+            uid: uid,
+            daley: username,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await db.collection("users").doc(uid).set({
+            username: username,
+            email: email || null,
+            password: password,
+            dateOfBirth: dob,
+            daley: username,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+            lastLoginLocation: location,
+            signupLocation: location
+        });
+
+        // Success delay before redirect
+        btn.html('<i class="fas fa-check"></i> Account Created! Redirecting...');
+        
+        setTimeout(() => {
+            window.location.href = "Home.html";
+        }, 1500); // 1.5 second delay
+
+    } catch (error) {
+        alert(error.message || "Signup failed");
+        btn.prop('disabled', false).text('Sign up');
+    }
+});
+
+// Birthday Setup
+$(function () {
+    const $day = $('#dob-day'), $year = $('#dob-year'), $month = $('#dob-month');
+    for (let i = 1; i <= 31; i++) $day.append(`<option value="${i<10?'0'+i:i}">${i}</option>`);
+    for (let i = 2026; i >= 1891; i--) $year.append(`<option value="${i}">${i}</option>`);
+
+    function updateDOB() {
+        const m = $month.val(), d = $day.val(), y = $year.val();
+        $('#dateOfBirth').val(m && d && y ? `${y}-${m}-${d}` : '');
+    }
+    $month.add($day).add($year).on('change', updateDOB);
+});
+</script>
+
+</body>
+</html>
