@@ -1,102 +1,464 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>PaulyRoom Admin Panel</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Platform Hub & Account Control Matrix - PaulyRoom</title>
+
+    <!-- FIREBASE COMPAT STACK CORE INITIALIZATION -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+    <!-- LAYOUT COMPONENT DEPENDENCIES -->
+    <link rel="stylesheet" href="https://cdn.bopimo.com/static/dist/css/main.b1e8e2d33d08a4745e862f94caa902f5.css" media="print" onload="this.media='all'">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #1a1a1a; color: #fff; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: #262626; padding: 20px; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border-bottom: 1px solid #444; text-align: left; }
-        .btn { padding: 8px 12px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
-        .btn-ban { background: #d9534f; color: white; }
-        .btn-unban { background: #5cb85c; color: white; }
-        .status-true { color: #d9534f; font-weight: bold; }
+        :root { --accent: #ff8800; } 
+        .username-text, .username { color: var(--accent) !important; }
+        .bg-icon { background: var(--accent) !important; }
+        
+        body { background-color: #f4f5f7; font-family: sans-serif; }
+
+        /* Component Framework Structural Blocks */
+        .master-grid-panel { display: flex; flex-direction: column; gap: 25px; margin-bottom: 50px; }
+        .feature-block-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .block-headline { font-size: 1.3rem; font-weight: bold; margin: 0 0 15px 0; color: #333; }
+        
+        /* Directory List View Components */
+        .users-list-container { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        .user-list-row { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px 20px; }
+        .user-list-row.exact-match-priority { border-left: 5px solid var(--accent); background: #fffdf9; }
+        .user-row-left { display: flex; align-items: center; gap: 15px; }
+        .user-row-avatar { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #eaeaea; overflow: hidden; }
+        .user-row-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .exact-match-tag { background: var(--accent); color: white; font-size: 0.65rem; font-weight: bold; padding: 2px 5px; border-radius: 3px; margin-left: 8px; text-transform: uppercase; }
+
+        /* Dynamic Restriction Layout Overlay Structures */
+        .ban-view-frame { border-top: 6px solid #dc3545; max-width: 650px; margin: 40px auto; padding: 35px; background: #fff; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .ban-header-text { color: #dc3545; font-size: 1.7rem; font-weight: bold; margin-bottom: 20px; text-align: center; text-transform: uppercase; }
+        .meta-container-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 18px 22px; margin-bottom: 20px; font-size: 0.95rem; }
+        .meta-item-row { margin-bottom: 12px; color: #333; display: flex; }
+        .meta-item-label { font-weight: bold; color: #555; width: 140px; flex-shrink: 0; }
+        
+        /* Directives Input Controller Layout Elements */
+        .actions-wrapper-flex { display: flex; justify-content: center; gap: 12px; margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px; }
+        .control-action-btn { padding: 11px 24px; border-radius: 5px; font-weight: bold; font-size: 0.92rem; cursor: pointer; border: none; transition: opacity 0.15s; }
+        .control-action-btn:hover { opacity: 0.9; }
+        .btn-gray { background: #6c757d; color: #fff; }
+        .btn-orange { background: var(--accent); color: #fff; }
+        .btn-green { background: #28a745; color: #fff; }
+        .hidden-element { display: none !important; }
+
+        /* Admin Console Controls Framework Style block */
+        .admin-dashboard-panel { border-top: 5px solid #007bff; background: #fdfeff; }
+        .admin-control-row { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .admin-action-btn { padding: 8px 16px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; cursor: pointer; border: none; color: #fff; }
+        .adm-warn { background: #ffc107; color: #212529; }
+        .adm-ban1 { background: #fd7e14; }
+        .adm-ban2 { background: #dc3545; }
+        .adm-term { background: #343a40; }
+        .adm-clear { background: #28a745; }
+        
+        /* Structural Warning Interlock Popover */
+        .warning-gate-cover { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,10,0.96); z-index: 999999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .warning-gate-body { background: #fff; border-radius: 12px; max-width: 480px; width: 92%; padding: 35px; box-shadow: 0 15px 45px rgba(0,0,0,0.6); border-top: 6px solid #ff8800; }
+        .warn-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 12px; color: #ff8800; }
+        .warn-desc { font-size: 0.95rem; line-height: 1.55; color: #444; margin-bottom: 20px; }
+        .warn-ack-check { display: flex; align-items: flex-start; gap: 10px; margin: 20px 0; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #e9ecef; cursor: pointer; }
     </style>
 </head>
 <body>
+    <div id="app" class="content">
+        <!-- GLOBAL APP LAYOUT HEADER NAVIGATION BAR -->
+        <nav class="navbar" id="global-navbar">
+            <div class="container">
+                <ul class="left">
+                    <li class="logo"><a><img src="https://i.postimg.cc/BZ8GGxGg/Chat-GPT-Image-Jun-16-2026-07-28-59-PM-removebg-preview.png" alt="logo"></a></li> 
+                    <li class="nav-link-item"><a>Play</a></li> 
+                    <li class="nav-link-item"><a>Shop</a></li> 
+                    <li class="nav-link-item"><a>Forums</a></li> 
+                    <li class="nav-link-item"><a class="active">Users</a></li> 
+                    <li class="nav-link-item"><a>Download</a></li> 
+                    <li class="nav-link-item"><a>Upgrade</a></li>
+                </ul> 
+                <ul class="right">
+                    <li class="user-coins"><a><div class="flex-align-middle"><i class="fas fa-users"></i> <div>0</div></div></a></li> 
+                    <li class="user-coins"><a><div class="flex-align-middle"><i class="fas fa-envelope"></i> <div>0</div></div></a></li> 
+                    <li class="user-coins coins"><a><div class="flex-align-middle"><div class="b-coin"></div> <div>0</div></div></a></li> 
+                    <li class="user-navbar">
+                        <div><span class="username username-medium"><span id="navbar-username" class="username-text">GuestSession</span></span></div> 
+                        <div class="user-image"><img src="https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png" alt="avatar"></div> 
+                    </li>
+                </ul>
+            </div>
+        </nav> 
+        
+        <div class="nav-push"></div> 
 
-<div class="container">
-    <h1>Admin Control Panel</h1>
-    <div id="admin-interface" style="display:none;">
-        <table id="user-table">
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="user-body"></tbody>
-        </table>
+        <div class="container">
+            <!-- HARDWARE HARD LOCKOUT LOCAL DATA OVERLAY -->
+            <div id="hardware-block-screen" class="hidden-element">
+                <div class="ban-view-frame" style="border-top-color: #721c24;">
+                    <div class="ban-header-text" style="color: #721c24;">Browser Profile Blacklisted</div>
+                    <div class="meta-container-box" style="background: #f8d7da; border-color: #f5c6cb; color: #721c24;">
+                        <p><strong>Security Flag Raised:</strong> This browser device profile has been associated with a critical terms-of-service account termination event.</p>
+                        <p>Access to all structural application pages, directory routing endpoints, and user session initializations has been fully restricted on this device.</p>
+                    </div>
+                    <div class="actions-wrapper-flex">
+                        <button class="control-action-btn btn-gray" onclick="clearLocalHardwareBanDebug()">Admin Clear Device Cache</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERSISTENT LIVE SESSION RESTRICTION INTERLOCK PANEL SYSTEM -->
+            <div id="account-lockout-screen" class="hidden-element">
+                <div class="ban-view-frame">
+                    <div class="ban-header-text" id="ban-card-title">Account Blocked</div>
+                    <div class="meta-container-box">
+                        <div class="meta-item-row"><span class="meta-item-label">Account Target:</span> <span id="info-username">...</span></div>
+                        <div class="meta-item-row"><span class="meta-item-label">Ban Duration:</span> <span id="info-duration">...</span></div>
+                        <div class="meta-item-row"><span class="meta-item-label">Time Remaining:</span> <span id="info-timer" style="color: #dc3545; font-weight: bold;">Calculating...</span></div>
+                        <div class="meta-item-row" style="border-top: 1px solid #e9ecef; margin-top: 15px; padding-top: 15px; display: block;">
+                            <span class="meta-item-label" style="display: block; margin-bottom: 4px;">Moderator Note:</span> 
+                            <span id="info-note" style="color: #666; font-style: italic; line-height: 1.4; display: block;">Synchronizing server log parameters...</span>
+                        </div>
+                    </div>
+                    <div class="actions-wrapper-flex">
+                        <button class="control-action-btn btn-gray" onclick="leaveSessionLogout()">Sign Out / Switch Account</button>
+                        <button id="rules-agree-btn" class="control-action-btn btn-orange hidden-element" onclick="handleRulesAgreementClick()">I Agree to Follow PaulyRoom ToS & Rules</button>
+                        <button id="account-reactivate-btn" class="control-action-btn btn-green hidden-element" onclick="confirmReactivationAction()">Confirm Reactivate Account</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CORE ACTIVE WORKSPACE DASHBOARD MATRIX VIEW -->
+            <div id="main-platform-workspace" class="master-grid-panel">
+                
+                <!-- INTEGRATED SIMULATION ADMIN DESK MATRIX PANEL -->
+                <div class="feature-block-card admin-dashboard-panel">
+                    <h2 class="block-headline" style="color: #007bff;"><i class="fas fa-gavel"></i> Administrative Ban Desk</h2>
+                    <p style="font-size: 0.88rem; margin: 0 0 12px 0; color: #555;">
+                        Logged-in Identity: <strong id="current-identity-tag"></strong>
+                    </p>
+                    <div style="background: #eef7ff; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 0.85rem; border: 1px solid #bce0ff;">
+                        <strong>Targeting System:</strong> Search for any user in the registry box below. Use their control interface row to set their ban profile status without blocking your own admin workspace view!
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <input type="text" id="admin-switch-user-input" class="form-control" style="width: 220px; padding: 6px 10px;" placeholder="Switch my login identity...">
+                        <button class="control-action-btn btn-gray" style="padding: 6px 14px;" onclick="switchMyCurrentLoginSession()">Switch Identity</button>
+                    </div>
+                </div>
+
+                <!-- USER SEARCH ENGINE DIRECTORY PANEL -->
+                <div class="feature-block-card">
+                    <h2 class="block-headline">Search Directory & Moderation Matrix</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="directory-search-input" class="form-control" style="flex-grow: 1; padding: 10px;" placeholder="Search profiles to moderate or view..." onkeyup="if(event.key==='Enter')runUserRegistrySearch()">
+                        <button class="control-action-btn btn-orange" style="border-radius:4px;" onclick="runUserRegistrySearch()">Search</button>
+                    </div>
+                    <div class="users-list-container" id="users-directory-target">
+                        <div style="text-align: center; color: #999; padding: 30px; font-style: italic;">Provide an explicit identity string input field parameter query above.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APP WARNING INTERLOCK MOUNT BLOCK TARGET -->
+        <div id="warning-gate-mount-target"></div>
     </div>
-    <div id="denied-msg" style="display:none; color:red; font-size: 1.5rem; text-align:center;">
-        ACCESS DENIED: You are not the administrator.
-    </div>
-</div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
-    // REPLACE THIS WITH YOUR ACTUAL FIREBASE CONFIG
+<script>
+    // CORE UNIFIED ENVIRONMENT SYSTEM DEFINITION PROPERTIES
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "YOUR_ID",
-        appId: "YOUR_APP_ID"
+        apiKey: "AIzaSyBy431WZJp9k4DLL8AclwqU8G3QhVKJ3Ws",
+        authDomain: "paulyroom-dc99e.firebaseapp.com",
+        projectId: "paulyroom-dc99e",
+        storageBucket: "paulyroom-dc99e.firebasestorage.app",
+        messagingSenderId: "676053619588",
+        appId: "1:676053619588:web:2abffee0cf9295031303d1"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    
+    // Identity verification parameters
+    let clientUser = (localStorage.getItem("username") || "").trim();
+    if (!clientUser) {
+        clientUser = "PaulyRoomAdmin"; // Default workspace master session identity
+        localStorage.setItem("username", clientUser);
+    }
+    
+    document.getElementById("navbar-username").textContent = clientUser;
+    document.getElementById("info-username").textContent = clientUser;
+    document.getElementById("current-identity-tag").textContent = clientUser;
 
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) { window.location.href = "login.html"; return; }
+    let currentDocId = null;
+    let clockIntervalId = null;
 
-        // Security check: Only PaulyRoomAdmin can see this
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists() && userDoc.data().username === "PaulyRoomAdmin") {
-            document.getElementById("admin-interface").style.display = "block";
-            loadUsers();
-        } else {
-            document.getElementById("denied-msg").style.display = "block";
+    // RUN REALTIME MASTER SYSTEM MONITOR BLOCK
+    initializeRealtimeSecurityListener();
+
+    function initializeRealtimeSecurityListener() {
+        // ENFORCE LOCAL STORAGE BROWSER BLACKLIST CHECK IMMEDIATELY
+        if (localStorage.getItem("device_hardware_ban_lock") === "true") {
+            triggerHardwareLevelLockoutPage();
+            return;
         }
-    });
 
-    async function loadUsers() {
-        const querySnapshot = await getDocs(collection(db, "users"));
-        const tbody = document.getElementById("user-body");
-        tbody.innerHTML = "";
+        db.collection("users").where("username", "==", clientUser)
+            .onSnapshot(snapshot => {
+                if (clockIntervalId) clearInterval(clockIntervalId);
+                
+                // Drop stale mount wrappers down
+                document.getElementById("warning-gate-mount-target").innerHTML = "";
 
-        querySnapshot.forEach((docSnap) => {
-            const user = docSnap.data();
-            const isBanned = user.banned === true;
-            
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${user.username}</td>
-                <td class="${isBanned ? 'status-true' : ''}">${isBanned ? 'BANNED' : 'Active'}</td>
-                <td>
-                    <button class="btn ${isBanned ? 'btn-unban' : 'btn-ban'}" 
-                            onclick="toggleBan('${docSnap.id}', ${!isBanned})">
-                        ${isBanned ? 'Unban' : 'Ban'}
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
+                if (snapshot.empty) {
+                    showWorkspaceLayout();
+                    return;
+                }
+
+                const docDoc = snapshot.docs[0];
+                currentDocId = docDoc.id;
+                const userData = docDoc.data();
+                const currentStatus = userData.status || "";
+
+                // ROUTE PATHWAY 1: ACTIVE PIPELINES
+                if (currentStatus === "Active" || currentStatus === "Pending" || !currentStatus) {
+                    showWorkspaceLayout();
+                    return;
+                }
+
+                // ROUTE PATHWAY 2: WARNING OVERLAY ARCHETYPE
+                if (currentStatus === "Warning") {
+                    showWorkspaceLayout(); // Keeps workspace view underneath backdrop glass frame
+                    
+                    const gateMount = document.getElementById("warning-gate-mount-target");
+                    gateMount.innerHTML = `
+                        <div class="warning-gate-cover">
+                            <div class="warning-gate-body">
+                                <div class="warn-title">Account Behavior Notice</div>
+                                <div class="warn-desc">
+                                    Your account session (<strong>${clientUser}</strong>) has received an administrative policy warning notice alert block. Review community behavior logs to continue profile tracking operations.
+                                    <label class="warn-ack-check">
+                                        <input type="checkbox" onchange="document.getElementById('warn-gate-submit-btn').disabled = !this.checked">
+                                        <span style="font-size:0.88rem; color:#444; margin-left:5px;">I explicitly promise to uphold the PaulyRoom Terms of Service parameters.</span>
+                                    </label>
+                                </div>
+                                <button id="warn-gate-submit-btn" class="control-action-btn btn-orange" style="width:100%;" disabled onclick="dismissWarningAcknowledgeNode()">Confirm & Reactivate Session</button>
+                            </div>
+                        </div>`;
+                    return;
+                }
+
+                // ROUTE PATHWAY 3: ACCOUNT REVIEWS AND SUSPENSIONS (`Banned1`, `Banned2`, `Termination`)
+                // SAVE TO LOCAL DATA (BROWSER LAYER PERSISTENCE MECHANISM)
+                localStorage.setItem("device_hardware_ban_lock", "true");
+                showLockoutLayout();
+
+                let reportingParty = userData.reportedBy || "an Administrator Report Log Processing Node";
+                document.getElementById("info-note").textContent = `This account restriction profile was generated matching an action log submitted via account query by user: "${reportingParty}".`;
+
+                if (currentStatus === "Termination" || userData.deleted === true) {
+                    document.getElementById("ban-card-title").textContent = "Account Terminated";
+                    document.getElementById("info-duration").textContent = "Permanent Infinite Lockout";
+                    document.getElementById("info-timer").textContent = "Access Indefinitely Revoked";
+                    hideReactivationControls();
+                    return;
+                }
+
+                if (currentStatus === "Banned1" || currentStatus === "Banned2") {
+                    const lockoutDays = currentStatus === "Banned1" ? 1 : 2;
+                    document.getElementById("ban-card-title").textContent = "Account Suspended";
+                    document.getElementById("info-duration").textContent = `${lockoutDays} Day Suspension`;
+
+                    let timestampIssued = userData.banTimestamp?.toDate() || new Date(userData.banTimestamp || Date.now());
+                    const targetExpirationEpoch = timestampIssued.getTime() + (lockoutDays * 24 * 60 * 60 * 1000);
+
+                    const runClockEvaluationLoop = () => {
+                        const msRemaining = targetExpirationEpoch - Date.now();
+                        if (msRemaining > 0) {
+                            const hours = Math.floor(msRemaining / (1000 * 60 * 60));
+                            const minutes = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((msRemaining % (1000 * 60)) / 1000);
+                            document.getElementById("info-timer").textContent = `${hours}h ${minutes}m ${seconds}s remaining`;
+                            hideReactivationControls();
+                        } else {
+                            document.getElementById("info-timer").textContent = "Expired! Reactivation available.";
+                            document.getElementById("info-timer").style.color = "#28a745";
+                            clearInterval(clockIntervalId);
+                            if (document.getElementById("account-reactivate-btn").classList.contains("hidden-element")) {
+                                document.getElementById("rules-agree-btn").classList.remove("hidden-element");
+                            }
+                        }
+                    };
+
+                    runClockEvaluationLoop();
+                    clockIntervalId = setInterval(runClockEvaluationLoop, 1000);
+                }
+            });
+    }
+
+    function showWorkspaceLayout() {
+        document.getElementById("main-platform-workspace").classList.remove("hidden-element");
+        document.getElementById("account-lockout-screen").classList.add("hidden-element");
+        document.getElementById("hardware-block-screen").classList.add("hidden-element");
+        // Restore all structural subpages view states
+        setNavbarLinksVisibility(true);
+    }
+
+    function showLockoutLayout() {
+        document.getElementById("main-platform-workspace").classList.add("hidden-element");
+        document.getElementById("account-lockout-screen").classList.remove("hidden-element");
+        document.getElementById("hardware-block-screen").classList.add("hidden-element");
+        // Block all navigation system pages
+        setNavbarLinksVisibility(false);
+    }
+
+    function triggerHardwareLevelLockoutPage() {
+        document.getElementById("main-platform-workspace").classList.add("hidden-element");
+        document.getElementById("account-lockout-screen").classList.add("hidden-element");
+        document.getElementById("hardware-block-screen").classList.remove("hidden-element");
+        setNavbarLinksVisibility(false);
+    }
+
+    function setNavbarLinksVisibility(isVisible) {
+        const items = document.querySelectorAll(".nav-link-item");
+        items.forEach(el => {
+            if (isVisible) {
+                el.style.pointerEvents = "auto";
+                el.style.opacity = "1";
+            } else {
+                el.style.pointerEvents = "none";
+                el.style.opacity = "0.2";
+            }
         });
     }
 
-    // Expose to window for the onclick handler
-    window.toggleBan = async (uid, status) => {
-        await updateDoc(doc(db, "users", uid), { banned: status });
-        loadUsers(); // Refresh the list
-    };
-</script>
+    function hideReactivationControls() {
+        document.getElementById("rules-agree-btn").classList.add("hidden-element");
+        document.getElementById("account-reactivate-btn").classList.add("hidden-element");
+    }
 
+    function handleRulesAgreementClick() {
+        document.getElementById("rules-agree-btn").classList.add("hidden-element");
+        document.getElementById("account-reactivate-btn").classList.remove("hidden-element");
+    }
+
+    function dismissWarningAcknowledgeNode() {
+        if (!currentDocId) return;
+        db.collection("users").doc(currentDocId).update({ status: "Active" });
+    }
+
+    function confirmReactivationAction() {
+        if (!currentDocId) return;
+        localStorage.removeItem("device_hardware_ban_lock");
+        db.collection("users").doc(currentDocId).update({
+            status: "Active",
+            banTimestamp: null,
+            reportedBy: firebase.firestore.FieldValue.delete()
+        });
+    }
+
+    // TARGETED ADMINISTRATIVE FIREBASE ACTIONS
+    function executeTargetedUserBan(targetDocId, targetUsername, statusString) {
+        let payload = {
+            status: statusString,
+            banTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            reportedBy: clientUser
+        };
+        
+        if (statusString === "Active") {
+            payload.banTimestamp = null;
+        }
+
+        db.collection("users").doc(targetDocId).update(payload)
+            .then(() => {
+                alert(`Successfully set status of "${targetUsername}" to ${statusString}!`);
+                runUserRegistrySearch(); // Refresh list to view status updates
+            })
+            .catch(err => alert(`Error processing status alteration: ${err.message}`));
+    }
+
+    // REGISTRY DIRECTORY LOOKUP ROUTINE
+    function runUserRegistrySearch() {
+        const queryVal = document.getElementById("directory-search-input").value.trim().toLowerCase();
+        const targetOutputBox = document.getElementById("users-directory-target");
+        
+        if (!queryVal) {
+            targetOutputBox.innerHTML = `<div style="text-align:center;color:#999;padding:30px;font-style:italic;">Please enter a search string.</div>`;
+            return;
+        }
+
+        targetOutputBox.innerHTML = `<div style="text-align:center;color:#999;padding:30px;"><i class="fas fa-spinner fa-spin"></i> Reading database collection references...</div>`;
+        
+        db.collection("users").get().then(snap => {
+            let matchesFound = [];
+            snap.forEach(doc => {
+                const uData = doc.data();
+                const currentName = uData.username || "";
+                if (currentName.toLowerCase().includes(queryVal)) {
+                    matchesFound.push({
+                        id: doc.id,
+                        name: currentName,
+                        status: uData.status || "Active",
+                        joined: uData.joinedDate || "2026",
+                        avatar: uData.avatarUrl || "https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png"
+                    });
+                }
+            });
+
+            if (matchesFound.length === 0) {
+                targetOutputBox.innerHTML = `<div style="text-align:center;color:#dc3545;padding:30px;font-style:italic;">No visible profiles match query search configuration parameters.</div>`;
+                return;
+            }
+
+            targetOutputBox.innerHTML = "";
+            matchesFound.forEach(item => {
+                const isExact = item.name.toLowerCase() === queryVal;
+                const card = document.createElement("div");
+                card.className = `user-list-row ${isExact ? 'exact-match-priority' : ''}`;
+                
+                // Construct specific control block dashboard for administrative actions on this individual row
+                card.innerHTML = `
+                    <div class="user-row-left" style="flex-wrap: wrap;">
+                        <div class="user-row-avatar"><img src="${item.avatar}"></div>
+                        <div>
+                            <div style="font-weight:bold;">${item.name}${isExact ? '<span class="exact-match-tag">Match</span>' : ''}</div>
+                            <div style="font-size:0.75rem; color:#888;">Joined: ${item.joined} | Current State: <span style="color:var(--accent); font-weight:bold;">${item.status}</span></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:10px;">
+                        <button class="admin-action-btn adm-warn" style="font-size:0.75rem; padding:4px 8px;" onclick="executeTargetedUserBan('${item.id}', '${item.name}', 'Warning')">Warn</button>
+                        <button class="admin-action-btn adm-ban1" style="font-size:0.75rem; padding:4px 8px;" onclick="executeTargetedUserBan('${item.id}', '${item.name}', 'Banned1')">Ban 1D</button>
+                        <button class="admin-action-btn adm-ban2" style="font-size:0.75rem; padding:4px 8px;" onclick="executeTargetedUserBan('${item.id}', '${item.name}', 'Banned2')">Ban 2D</button>
+                        <button class="admin-action-btn adm-term" style="font-size:0.75rem; padding:4px 8px;" onclick="executeTargetedUserBan('${item.id}', '${item.name}', 'Termination')">Terminate</button>
+                        <button class="admin-action-btn adm-clear" style="font-size:0.75rem; padding:4px 8px;" onclick="executeTargetedUserBan('${item.id}', '${item.name}', 'Active')">Unban</button>
+                    </div>
+                `;
+                targetOutputBox.appendChild(card);
+            });
+        });
+    }
+
+    function switchMyCurrentLoginSession() {
+        const targetVal = document.getElementById("admin-switch-user-input").value.trim();
+        if(!targetVal) return alert("Provide a valid identity name.");
+        localStorage.setItem("username", targetVal);
+        window.location.reload();
+    }
+
+    function clearLocalHardwareBanDebug() {
+        localStorage.removeItem("device_hardware_ban_lock");
+        alert("Browser device cache lock record removed.");
+        window.location.reload();
+    }
+
+    function leaveSessionLogout() {
+        localStorage.removeItem("username");
+        alert("Session keys dropped down. Sign-in reference reset.");
+        window.location.reload();
+    }
+</script>
 </body>
 </html>
