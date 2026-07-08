@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Users - PaulyRoom</title>
+
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+    (function () {
+        const firebaseConfig = {
+            apiKey: "AIzaSyBy431WZJp9k4DLL8AclwqU8G3QhVKJ3Ws",
+            authDomain: "paulyroom-dc99e.firebaseapp.com",
+            projectId: "paulyroom-dc99e",
+            storageBucket: "paulyroom-dc99e.firebasestorage.app",
+            messagingSenderId: "676053619588",
+            appId: "1:676053619588:web:2abffee0cf9295031303d1"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const secureDb = firebase.firestore();
+        const activePath = window.location.pathname.split("/").pop();
+        
+        if (activePath === "IPban.html" || activePath === "NotApproved.html") return; 
+
+        const activeUserToken = (localStorage.getItem("username") || "").trim();
+        if (!activeUserToken) return;
+
+        secureDb.collection("users")
+            .where("username", "==", activeUserToken)
+            .get() 
+            .then(snapshot => {
+                if (snapshot.empty) return;
+
+                const docSnapshot = snapshot.docs[0];
+                const userState = docSnapshot.data();
+                const securityStatus = userState.status || "";
+
+                if (securityStatus === "IP") {
+                    window.location.href = "IPban.html";
+                    return;
+                }
+                if (securityStatus === "Termination" || userState.deleted === true) {
+                    window.location.href = "NotApproved.html";
+                    return;
+                }
+
+                const injectSecurityStyles = () => {
+                    if (document.getElementById("sec-gate-css")) return;
+                    const cssNode = document.createElement("style");
+                    cssNode.id = "sec-gate-css";
+                    cssNode.innerHTML = `.g-lock{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,10,0.95);z-index:9999999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);font-family:sans-serif;color:#333}.g-box{background:#fff;border-radius:12px;max-width:480px;width:90%;padding:35px;box-shadow:0 12px 40px rgba(0,0,0,0.5);border-top:6px solid #dc3545}.g-title{font-size:1.6rem;font-weight:bold;margin-bottom:15px;color:#dc3545}.g-body{font-size:0.98rem;line-height:1.55;color:#444;margin-bottom:25px}.g-check{display:flex;align-items:flex-start;gap:10px;margin:20px 0;background:#f8f9fa;padding:12px;border-radius:6px;border:1px solid #e9ecef;cursor:pointer;font-size:0.92rem}.g-btn{width:100%;background:#28a745;color:#fff;border:none;padding:12px;border-radius:6px;font-weight:bold;font-size:1.05rem;cursor:pointer}.g-btn:disabled{background:#ced4da;cursor:not-allowed;color:#6c757d}`;
+                    document.head.appendChild(cssNode);
+                };
+
+                if (securityStatus === "Warning") {
+                    injectSecurityStyles();
+                    const nodeOverlay = document.createElement("div");
+                    nodeOverlay.className = "g-lock";
+                    nodeOverlay.innerHTML = `
+                        <div class="g-box" style="border-top-color:#ff8800;">
+                            <div class="g-title" style="color:#ff8800;">Account Alert Issued</div>
+                            <div class="g-body">
+                                Your PaulyRoom profile session has encountered an account restriction alert notice. You must accept our behavior parameters code statement to resume using the service.
+                                <label class="g-check">
+                                    <input type="checkbox" onchange="document.getElementById('g-warn-btn').disabled = !this.checked">
+                                    <span>I explicitly accept the PaulyRoom Terms of Use (ToS) and community guidelines.</span>
+                                </label>
+                            </div>
+                            <button id="g-warn-btn" class="g-btn" style="background:#ff8800;" disabled>Reactivate Account</button>
+                        </div>`;
+                    document.body.appendChild(nodeOverlay);
+                    nodeOverlay.querySelector("button").addEventListener("click", () => restoreProfileSession(docSnapshot.id));
+                    return;
+                }
+
+                if (securityStatus === "Banned1" || securityStatus === "Banned2") {
+                    injectSecurityStyles();
+                    const standardBanDurationDays = securityStatus === "Banned1" ? 1 : 2;
+                    let dateIssuedObj = userState.banTimestamp?.toDate() || new Date(userState.banTimestamp || Date.now());
+
+                    const absoluteExpirationTime = new Date(dateIssuedObj.getTime() + (standardBanDurationDays * 24 * 60 * 60 * 1000));
+                    const totalMillisecondDifference = absoluteExpirationTime - new Date();
+                    const nodeOverlay = document.createElement("div");
+                    nodeOverlay.className = "g-lock";
+
+                    if (totalMillisecondDifference > 0) {
+                        const hoursRem = Math.ceil(totalMillisecondDifference / (1000 * 60 * 60));
+                        nodeOverlay.innerHTML = `
+                            <div class="g-box">
+                                <div class="g-title">Account Suspended</div>
+                                <div class="g-body">
+                                    Access denied. Your account is temporarily restricted under a <b>${standardBanDurationDays} Day</b> ban lock.
+                                    <br><br><b>Time Remaining:</b> approximately ${hoursRem} hour(s).
+                                </div>
+                                <button class="g-btn" disabled>Reactivate Account (Locked)</button>
+                            </div>`;
+                    } else {
+                        nodeOverlay.innerHTML = `
+                            <div class="g-box" style="border-top-color:#28a745;">
+                                <div class="g-title" style="color:#28a745;">Suspension Expired</div>
+                                <div class="g-body">
+                                    Your temporary account suspension restriction has expired. Accept the rules to restore your account interface access.
+                                    <label class="g-check">
+                                        <input type="checkbox" onchange="document.getElementById('g-expired-btn').disabled = !this.checked">
+                                        <span>I agree to follow the PaulyRoom Terms of Use (ToS) moving forward.</span>
+                                    </label>
+                                </div>
+                                <button id="g-expired-btn" class="g-btn" disabled>Reactivate Account</button>
+                            </div>`;
+                    }
+
+                    document.body.appendChild(nodeOverlay);
+                    const ub = nodeOverlay.querySelector("#g-expired-btn");
+                    if (ub) ub.addEventListener("click", () => restoreProfileSession(docSnapshot.id));
+                }
+            });
+
+        function restoreProfileSession(docId) {
+            secureDb.collection("users").doc(docId).update({ status: "Active", banTimestamp: null })
+                .then(() => window.location.reload())
+                .catch(() => alert("Database connection timeout."));
+        }
+    })();
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.bopimo.com/static/dist/css/main.b1e8e2d33d08a4745e862f94caa902f5.css" media="print" onload="this.media='all'">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script src="https://cdn.bopimo.com/static/dist/js/manifest.e4e0a03ba355db6dd283217de1fee883.js" async></script>
+    <script src="https://cdn.bopimo.com/static/dist/js/vendor.620d5822184d7b9e3effd43cd040c482.js" defer></script>
+    <script src="https://cdn.bopimo.com/static/dist/js/babylonjs.722a531baab17568a354a9150d9c067e.js" defer></script>
+    <script src="https://cdn.bopimo.com/static/dist/js/main.c97b6336e39bb09a5d7cecfcad4886ad.js" defer></script>
+
+    <style>
+        :root { --accent: #ff8800; } 
+        .username-text, .username { color: var(--accent) !important; }
+        .bg-icon { background: var(--accent) !important; }
+        .shop-card.purple { border-color: var(--accent) !important; }
+
+        /* Search Layout */
+        .search-card-wrapper { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 22px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
+        .search-flex-row { display: flex; gap: 10px; margin-top: 10px; }
+        .search-input-field { flex-grow: 1; padding: 10px 14px; font-size: 0.95rem; border: 1px solid #ccc; border-radius: 5px; outline: none; }
+        .search-input-field:focus { border-color: var(--accent); }
+        .search-btn { background: var(--accent); color: #fff; border: none; padding: 0 24px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        
+        /* Grid Results Items */
+        .users-list-container { display: flex; flex-direction: column; gap: 12px; }
+        .user-list-row { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px 20px; transition: transform 0.15s; }
+        .user-list-row:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.04); }
+        
+        .user-list-row.exact-match-priority { border-left: 5px solid var(--accent); background: #fffdf9; }
+        .exact-match-tag { background: var(--accent); color: white; font-size: 0.65rem; font-weight: bold; padding: 2px 5px; border-radius: 3px; margin-left: 8px; text-transform: uppercase; }
+        .self-account-tag { background: #28a745; color: white; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 3px; margin-left: 8px; }
+
+        .user-row-left { display: flex; align-items: center; gap: 15px; }
+        .user-row-avatar { width: 48px; height: 48px; border-radius: 50%; background: #fafafa; border: 1px solid #eaeaea; overflow: hidden; }
+        .user-row-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-row-info { display: flex; flex-direction: column; }
+        .user-title-line { font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; }
+        .user-sub-line { font-size: 0.78rem; color: #888; margin-top: 2px; }
+
+        .action-button-group { display: flex; align-items: center; gap: 8px; }
+        .profile-redirect-btn { background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 6px 12px; font-size: 0.85rem; color: #444 !important; font-weight: 500; text-decoration: none; }
+        .report-user-btn { background: #fff1f1; border: 1px solid #fcc; border-radius: 4px; padding: 6px 12px; font-size: 0.85rem; color: #dc3545 !important; font-weight: 500; cursor: pointer; }
+        .status-notice-message { text-align: center; color: #aaa; padding: 50px 10px; font-style: italic; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="content">
+        <nav class="navbar">
+            <div class="container">
+                <ul class="left">
+                    <li class="logo"><a href="/dashboard"><img src="https://i.postimg.cc/BZ8GGxGg/Chat-GPT-Image-Jun-16-2026-07-28-59-PM-removebg-preview.png" alt="logo"></a></li> 
+                    <li><a href="/play">Play</a></li> 
+                    <li><a href="/shop">Shop</a></li> 
+                    <li><a href="/forums/">Forums</a></li> 
+                    <li><a href="/users" class="active">Users</a></li> 
+                    <li><a href="/download">Download</a></li> 
+                    <li><a href="/upgrade">Upgrade</a></li>
+                </ul> 
+                <ul class="right">
+                    <li class="user-coins"><a href="#"><div class="flex-align-middle"><i class="fas fa-users"></i> <div>0</div></div></a></li> 
+                    <li class="user-coins"><a href="/chat/"><div class="flex-align-middle"><i class="fas fa-envelope"></i> <div id="unread">0</div></div></a></li> 
+                    <li class="user-coins coins"><a href="https://www.bopimo.com/transactions"><div class="flex-align-middle"><div class="b-coin"></div> <div>0</div></div></a></li> 
+                    <li class="user-navbar">
+                        <div>
+                            <span class="username username-medium">
+                                <span id="navbar-username" class="username-text">PaulyRoom</span> 
+                            </span>
+                        </div> 
+                        <div class="user-image"><img src="https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png" alt="avatar"></div> 
+                    </li>
+                </ul>
+            </div>
+        </nav> 
+        
+        <div class="nav-push"></div> 
+        
+        <div class="container">
+            <div class="search-card-wrapper">
+                <h2 style="font-weight: bold; font-size: 1.3rem; margin: 0; color: #333;">Search Users Directory</h2>
+                <div class="search-flex-row">
+                    <input type="text" id="directory-search-input" class="search-input-field" placeholder="Search usernames (supports multiple languages & spaces)..." onkeyup="if(event.key==='Enter')runUserRegistrySearch()">
+                    <button class="search-btn" onclick="runUserRegistrySearch()">Search</button>
+                </div>
+            </div>
+
+            <div class="users-list-container" id="users-directory-target">
+                <div class="status-notice-message">Type a username profile string above to browse the user records matrix.</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const db = firebase.firestore();
+
+    function normalizeStringValue(str) {
+        if (!str) return "";
+        return str.toString().replace(/\s+/g, ' ').trim().toLowerCase();
+    }
+
+    function runUserRegistrySearch() {
+        const rawSearchInput = document.getElementById("directory-search-input").value;
+        const outputBox = document.getElementById("users-directory-target");
+        const activeClientUser = (localStorage.getItem("username") || "").trim();
+        const searchNormalized = normalizeStringValue(rawSearchInput);
+
+        if (!searchNormalized) {
+            outputBox.innerHTML = `<div class="status-notice-message">Please enter a valid search query.</div>`;
+            return;
+        }
+
+        outputBox.innerHTML = `<div class="status-notice-message"><i class="fas fa-spinner fa-spin"></i> Indexing records...</div>`;
+
+        db.collection("users").get().then(snapshot => {
+            let matchedUsersArray = [];
+            const searchLower = searchNormalized;
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const targetStatus = data.status || "";
+                
+                // Keep banned or flagged data completely hidden
+                if (data.deleted === true || ["Termination", "IP", "Banned1", "Banned2"].includes(targetStatus)) return;
+
+                const currentUsername = data.username || "";
+                const userNormalized = normalizeStringValue(currentUsername);
+                
+                // Space & multi-language comparison layer
+                if (userNormalized.includes(searchLower) || searchLower.includes(userNormalized)) {
+                    matchedUsersArray.push({
+                        username: currentUsername.trim(),
+                        joinedDate: data.joinedDate || "Unknown Date",
+                        avatarUrl: data.avatarUrl || "https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png"
+                    });
+                }
+            });
+
+            if (matchedUsersArray.length === 0) {
+                outputBox.innerHTML = `<div class="status-notice-message">No active accounts found matching "${escapeHTML(rawSearchInput.trim())}".</div>`;
+                return;
+            }
+
+            // Locale sorting matrix that forces exact string values to index 0
+            matchedUsersArray.sort((a, b) => {
+                const exactA = normalizeStringValue(a.username) === searchLower;
+                const exactB = normalizeStringValue(b.username) === searchLower;
+                if (exactA && !exactB) return -1;
+                if (!exactA && exactB) return 1;
+                return a.username.localeCompare(b.username, undefined, { sensitivity: 'base', numeric: true });
+            });
+
+            outputBox.innerHTML = "";
+            matchedUsersArray.forEach(user => {
+                const matchVerified = normalizeStringValue(user.username) === searchLower;
+                const isOwnAccount = user.username.toLowerCase() === activeClientUser.toLowerCase();
+                
+                const rowNode = document.createElement("div");
+                rowNode.className = `user-list-row ${matchVerified ? 'exact-match-priority' : ''}`;
+                rowNode.innerHTML = `
+                    <div class="user-row-left">
+                        <div class="user-row-avatar"><img src="${escapeHTML(user.avatarUrl)}" alt="user"></div>
+                        <div class="user-row-info">
+                            <div class="user-title-line">
+                                <span class="username-text">${escapeHTML(user.username)}</span>
+                                ${isOwnAccount ? '<span class="self-account-tag">Your Account :)</span>' : (matchVerified ? '<span class="exact-match-tag">Exact Match</span>' : '')}
+                            </div>
+                            <div class="user-sub-line">Joined: ${escapeHTML(user.joinedDate)}</div>
+                        </div>
+                    </div>
+                    <div class="action-button-group">
+                        <button class="report-user-btn" onclick="submitAbuseReport('${escapeHTML(user.username)}')">Report</button>
+                        <a href="/profile.html?user=${encodeURIComponent(user.username)}" class="profile-redirect-btn">View Profile</a>
+                    </div>`;
+                outputBox.appendChild(rowNode);
+            });
+        }).catch(() => {
+            outputBox.innerHTML = `<div class="status-notice-message" style="color:#d9534f;">Failed to retrieve records from the server index nodes.</div>`;
+        });
+    }
+
+    function submitAbuseReport(targetUser) {
+        const reporterUser = (localStorage.getItem("username") || "Anonymous Client").trim();
+        const reasonInput = prompt(`Why are you reporting ${targetUser}?`);
+        if (!reasonInput || !reasonInput.trim()) return;
+
+        db.collection("reports").add({
+            reportedUser: targetUser,
+            reportedBy: reporterUser,
+            reason: reasonInput.trim(),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            status: "Pending"
+        }).then(() => {
+            return db.collection("users").where("username", "==", targetUser).get();
+        }).then(userSnap => {
+            if (!userSnap.empty) {
+                db.collection("users").doc(userSnap.docs[0].id).collection("banHistory").add({
+                    incidentType: "Report Logged",
+                    reason: reasonInput.trim(),
+                    loggedBy: reporterUser,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+            alert(`Report filed successfully against user ${targetUser}.`);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const storedUsername = localStorage.getItem("username");
+        if (storedUsername) {
+            const navUser = document.getElementById("navbar-username");
+            if (navUser) navUser.textContent = storedUsername;
+        }
+    });
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+    }
+</script>
+</body>
+</html>
