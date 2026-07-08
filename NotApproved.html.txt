@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Account Review - PaulyRoom</title>
+
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+    <script>
+    let cdn = "https://cdn.bopimo.com";
+    function localFallback() {
+        document.querySelectorAll(`script[src^="${cdn}"]`).forEach((script) => {
+            let url = script.getAttribute('src');
+            let path = new URL(url).pathname.split('static')[1];
+            var scriptEl = document.createElement('script');
+            scriptEl.src = path;
+            document.head.appendChild(scriptEl);
+        });
+    }
+    function localCssFallback() {
+        document.querySelectorAll(`link[href^="${cdn}"]`).forEach((style) => {
+            let url = style.getAttribute('href');
+            let path = new URL(url).pathname.split('static')[1];
+            var link = document.createElement('link');
+            link.href = path;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+        });
+    }
+    function localFallbacks() { localFallback(); localCssFallback(); }
+    function cdnCheck() { window.Vue || (localFallbacks()); }
+    </script> 
+
+    <link rel="stylesheet" href="https://cdn.bopimo.com/static/dist/css/main.b1e8e2d33d08a4745e862f94caa902f5.css" media="print" onload="this.media='all'">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script src="https://cdn.bopimo.com/static/dist/js/manifest.e4e0a03ba355db6dd283217de1fee883.js" async></script>
+    <script src="https://cdn.bopimo.com/static/dist/js/vendor.620d5822184d7b9e3effd43cd040c482.js" defer></script>
+    <script src="https://cdn.bopimo.com/static/dist/js/babylonjs.722a531baab17568a354a9150d9c067e.js" defer></script>
+    <script src="https://cdn.bopimo.com/static/dist/js/main.c97b6336e39bb09a5d7cecfcad4886ad.js" defer onerror="cdnCheck()"></script>
+
+    <style>
+        :root { --accent: #ff8800; } 
+        .username-text, .username { color: var(--accent) !important; }
+        .bg-icon { background: var(--accent) !important; }
+        
+        /* Central Modular Restriction Card layout */
+        .ban-card {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            max-width: 650px;
+            margin: 50px auto;
+            padding: 35px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            border-top: 6px solid #dc3545;
+        }
+        .ban-header {
+            color: #dc3545;
+            font-size: 1.7rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .meta-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+        .meta-row {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .meta-row:last-child { margin-bottom: 0; }
+        .meta-label { font-weight: bold; color: #555; width: 140px; display: inline-block; }
+        
+        .action-flex-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 25px;
+        }
+        .action-btn {
+            padding: 11px 24px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.92rem;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.15s;
+        }
+        .action-btn:hover { opacity: 0.9; }
+        .btn-gray { background: #6c757d; color: #fff; }
+        .btn-orange { background: var(--accent); color: #fff; }
+        .btn-green { background: #28a745; color: #fff; }
+        .action-btn:disabled { background: #ced4da; color: #6c757d; cursor: not-allowed; opacity: 1; }
+        
+        .hidden-node { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="app" class="content">
+        <nav class="navbar" style="opacity: 0.6; pointer-events: none;">
+            <div class="container">
+                <ul class="left">
+                    <li class="logo"><a><img src="https://i.postimg.cc/BZ8GGxGg/Chat-GPT-Image-Jun-16-2026-07-28-59-PM-removebg-preview.png" alt="logo"></a></li> 
+                    <li><a>Play</a></li> <li><a>Shop</a></li> <li><a>Forums</a></li> <li><a>Users</a></li> <li><a>Download</a></li> <li><a>Upgrade</a></li>
+                </ul> 
+                <ul class="right">
+                    <li class="user-coins"><a><div class="flex-align-middle"><i class="fas fa-users"></i> <div>0</div></div></a></li> 
+                    <li class="user-coins"><a><div class="flex-align-middle"><i class="fas fa-envelope"></i> <div>0</div></div></a></li> 
+                    <li class="user-coins coins"><a><div class="flex-align-middle"><div class="b-coin"></div> <div>0</div></div></a></li> 
+                    <li class="user-navbar">
+                        <div><span class="username username-medium"><span id="navbar-username" class="username-text">PaulyRoom</span></span></div> 
+                        <div class="user-image"><img src="https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png" alt="avatar"></div> 
+                    </li>
+                </ul>
+            </div>
+        </nav> 
+        
+        <div class="nav-push"></div> 
+
+        <div class="container">
+            <div class="ban-card">
+                <div class="ban-header" id="ban-card-title">Checking Account Status...</div>
+                
+                <div class="meta-box">
+                    <div class="meta-row"><span class="meta-label">Reviewed Account:</span> <span id="info-username">...</span></div>
+                    <div class="meta-row"><span class="meta-label">Ban Duration:</span> <span id="info-duration" style="font-weight: 600;">...</span></div>
+                    <div class="meta-row"><span class="meta-label">Time Remaining:</span> <span id="info-timer" style="color: #dc3545; font-weight: 600;">Calculating...</span></div>
+                    <div class="meta-row" style="border-top: 1px solid #e9ecef; margin-top: 12px; padding-top: 12px; line-height: 1.5;">
+                        <span class="meta-label" style="display: block; margin-bottom: 4px;">Moderator Note:</span> 
+                        <span id="info-note" style="color: #666; font-style: italic;">Retrieving restriction metrics...</span>
+                    </div>
+                </div>
+
+                <div class="action-flex-container">
+                    <button class="action-btn btn-gray" onclick="leaveSessionLogout()">Log Out</button>
+                    <button id="rules-agree-btn" class="action-btn btn-orange hidden-node" onclick="handleRulesAgreementClick()">I Agree to Follow PaulyRoom ToS & Rules</button>
+                    <button id="account-reactivate-btn" class="action-btn btn-green hidden-node" onclick="confirmReactivationAction()">Confirm Reactivate PaulyRoom Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Initialize standard Firebase app scope mapping parameters
+    const firebaseConfig = {
+        apiKey: "AIzaSyBy431WZJp9k4DLL8AclwqU8G3QhVKJ3Ws",
+        authDomain: "paulyroom-dc99e.firebaseapp.com",
+        projectId: "paulyroom-dc99e",
+        storageBucket: "paulyroom-dc99e.firebasestorage.app",
+        messagingSenderId: "676053619588",
+        appId: "1:676053619588:web:2abffee0cf9295031303d1"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    
+    const clientUser = (localStorage.getItem("username") || "").trim();
+    let currentDocId = null;
+    let clockIntervalId = null;
+
+    if (!clientUser) {
+        window.location.href = "https://paulyroom-pr.github.io/PaulyRoom/index.html";
+    } else {
+        document.getElementById("info-username").textContent = clientUser;
+        const navUser = document.getElementById("navbar-username");
+        if (navUser) navUser.textContent = clientUser;
+        initializeRealtimeSecurityListener();
+    }
+
+    function initializeRealtimeSecurityListener() {
+        db.collection("users").where("username", "==", clientUser)
+            .onSnapshot(snapshot => {
+                if (clockIntervalId) clearInterval(clockIntervalId);
+                
+                // Realtime lifted status or data removal automatically kicks player out to safe zones
+                if (snapshot.empty) {
+                    window.location.href = "dashboard.html";
+                    return;
+                }
+
+                const docDoc = snapshot.docs[0];
+                currentDocId = docDoc.id;
+                const userData = docDoc.data();
+                const currentStatus = userData.status || "";
+
+                // Lifted, warning routing, or empty strings are pulled back to normal operations
+                if (currentStatus === "Active" || currentStatus === "Pending" || !currentStatus || currentStatus === "Warning") {
+                    window.location.href = "dashboard.html";
+                    return;
+                }
+                if (currentStatus === "IP") {
+                    window.location.href = "IPban.html";
+                    return;
+                }
+
+                // Process Note field tracking down the reporting source entity
+                let reporterNoteStr = "No report notes listed.";
+                if (userData.reportedBy) {
+                    reporterNoteStr = `This account was suspended following an official investigation into a report submitted by user: "${userData.reportedBy}".`;
+                } else if (userData.reason) {
+                    reporterNoteStr = `Violation Log: ${userData.reason}`;
+                }
+                document.getElementById("info-note").textContent = reporterNoteStr;
+
+                // Handle total termination path locks
+                if (currentStatus === "Termination" || userData.deleted === true) {
+                    document.getElementById("ban-card-title").textContent = "Account Terminated";
+                    document.getElementById("info-duration").textContent = "Permanent / Infinite";
+                    document.getElementById("info-timer").textContent = "Access Revoked and Blocked";
+                    hideReactivationControls();
+                    return;
+                }
+
+                // Temporary Ban Configurations Handling (`Banned1`, `Banned2`)
+                if (currentStatus === "Banned1" || currentStatus === "Banned2") {
+                    document.getElementById("ban-card-title").textContent = "Account Suspended";
+                    const dayCount = currentStatus === "Banned1" ? 1 : 2;
+                    document.getElementById("info-duration").textContent = `${dayCount} Day Lockout`;
+
+                    let timestampIssued = userData.banTimestamp?.toDate() || new Date(userData.banTimestamp || Date.now());
+                    const expirationTargetEpoch = timestampIssued.getTime() + (dayCount * 24 * 60 * 60 * 1000);
+
+                    const runClockEvaluationRoutine = () => {
+                        const msLeft = expirationTargetEpoch - Date.now();
+                        if (msLeft > 0) {
+                            const totalHours = Math.floor(msLeft / (1000 * 60 * 60));
+                            const totalMinutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+                            const totalSeconds = Math.floor((msLeft % (1000 * 60)) / 1000);
+                            
+                            document.getElementById("info-timer").textContent = `${totalHours}h ${totalMinutes}m ${totalSeconds}s remaining`;
+                            hideReactivationControls();
+                        } else {
+                            document.getElementById("info-timer").textContent = "Expired! (Awaiting review verification)";
+                            clearInterval(clockIntervalId);
+                            
+                            // Display step-1 rule confirmation control elements
+                            if (document.getElementById("account-reactivate-btn").classList.contains("hidden-node")) {
+                                document.getElementById("rules-agree-btn").classList.remove("hidden-node");
+                            }
+                        }
+                    };
+
+                    runClockEvaluationRoutine();
+                    clockIntervalId = setInterval(runClockEvaluationRoutine, 1000);
+                }
+            });
+    }
+
+    function hideReactivationControls() {
+        document.getElementById("rules-agree-btn").classList.add("hidden-node");
+        document.getElementById("account-reactivate-btn").classList.add("hidden-node");
+    }
+
+    function handleRulesAgreementClick() {
+        document.getElementById("rules-agree-btn").classList.add("hidden-node");
+        document.getElementById("account-reactivate-btn").classList.remove("hidden-node");
+    }
+
+    function confirmReactivationAction() {
+        if (!currentDocId) return;
+        
+        db.collection("users").doc(currentDocId).update({
+            status: "Active",
+            banTimestamp: null,
+            reportedBy: firebase.firestore.FieldValue.delete() // Clean stale fields
+        })
+        .then(() => {
+            window.location.href = "dashboard.html";
+        })
+        .catch(() => {
+            alert("Connection error occurred. Database node update timed out.");
+        });
+    }
+
+    function leaveSessionLogout() {
+        localStorage.removeItem("username");
+        window.location.href = "https://paulyroom-pr.github.io/PaulyRoom/index.html";
+    }
+</script>
+</body>
+</html>
