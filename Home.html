@@ -1,26 +1,47 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PaulyRoom - Home</title>
-    <link href="https://cdn.polytoria.com/static/app-DGvpBOdG.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://kit-pro.fontawesome.com/releases/v7.2.0/css/pro.min.css">
+    <title>Home</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="text-center mt-5">
-    <h1>Welcome back, <span id="username-display">SmallName</span>!</h1>
-    <button onclick="logout()" class="btn btn-danger mt-4">Logout</button>
-</div>
+    <header>
+        <h1>My Website</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="profile.html">Profile</a>
+            <button onclick="logout()">Logout</button>
+        </nav>
+    </header>
 
-<script>
-function logout() {
-    if (confirm("Are you sure you want to logout?")) {
-        window.location.href = "login.html";
-    }
-}
-</script>
+    <main>
+        <h2 id="welcome">Welcome back!</h2>
+        <p>Welcome to your homepage.</p>
+    </main>
+
+    <script>
+        // Get saved user information
+        const user = JSON.parse(localStorage.getItem("user"));
+
+        if (user && user.username) {
+            document.getElementById("welcome").textContent =
+                "Welcome back, " + user.username + "!";
+        } else {
+            document.getElementById("welcome").textContent =
+                "Welcome back, Guest!";
+        }
+
+        function logout() {
+            localStorage.removeItem("user");
+            window.location.href = "login.html";
+        }
+    </script>
 
 </body>
 </html>
+```
