@@ -68,14 +68,14 @@ const db = firebase.firestore();
 $('#login-form').on('submit', async function(e) {
     e.preventDefault();
 
-    const username = $('#username-input').val().trim();
+    const usernameInput = $('#username-input').val().trim();
     const password = $('#password-input').val();
     const btn = $('#login-btn');
 
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Logging in...');
 
     try {
-        const snap = await db.collection("usernames").where("lowercase", "==", username.toLowerCase()).get();
+        const snap = await db.collection("usernames").where("lowercase", "==", usernameInput.toLowerCase()).get();
         if (snap.empty) throw new Error("Username not found");
 
         const userData = snap.docs[0].data();
@@ -85,6 +85,9 @@ $('#login-form').on('submit', async function(e) {
         const user = userDoc.data();
 
         if (user.password !== password) throw new Error("Incorrect password");
+
+        // SAVE TO LOCAL STORAGE FOR THE HOMEPAGE TO READ
+        localStorage.setItem("username", user.username || userData.username || usernameInput);
 
         btn.html('<i class="fas fa-check"></i> Success! Redirecting...');
 
