@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PaulyRoom Admin Panel</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #1a1a1a; color: #fff; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: #262626; padding: 20px; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border-bottom: 1px solid #444; text-align: left; }
+        .btn { padding: 8px 12px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
+        .btn-ban { background: #d9534f; color: white; }
+        .btn-unban { background: #5cb85c; color: white; }
+        .status-true { color: #d9534f; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Admin Control Panel</h1>
+    <div id="admin-interface" style="display:none;">
+        <table id="user-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="user-body"></tbody>
+        </table>
+    </div>
+    <div id="denied-msg" style="display:none; color:red; font-size: 1.5rem; text-align:center;">
+        ACCESS DENIED: You are not the administrator.
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    // REPLACE THIS WITH YOUR ACTUAL FIREBASE CONFIG
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT.appspot.com",
+        messagingSenderId: "YOUR_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) { window.location.href = "login.html"; return; }
+
+        // Security check: Only PaulyRoomAdmin can see this
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists() && userDoc.data().username === "PaulyRoomAdmin") {
+            document.getElementById("admin-interface").style.display = "block";
+            loadUsers();
+        } else {
+            document.getElementById("denied-msg").style.display = "block";
+        }
+    });
+
+    async function loadUsers() {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        const tbody = document.getElementById("user-body");
+        tbody.innerHTML = "";
+
+        querySnapshot.forEach((docSnap) => {
+            const user = docSnap.data();
+            const isBanned = user.banned === true;
+            
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${user.username}</td>
+                <td class="${isBanned ? 'status-true' : ''}">${isBanned ? 'BANNED' : 'Active'}</td>
+                <td>
+                    <button class="btn ${isBanned ? 'btn-unban' : 'btn-ban'}" 
+                            onclick="toggleBan('${docSnap.id}', ${!isBanned})">
+                        ${isBanned ? 'Unban' : 'Ban'}
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Expose to window for the onclick handler
+    window.toggleBan = async (uid, status) => {
+        await updateDoc(doc(db, "users", uid), { banned: status });
+        loadUsers(); // Refresh the list
+    };
+</script>
+
+</body>
+</html>
