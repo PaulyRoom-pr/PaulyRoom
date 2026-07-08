@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html class="">
 <head>
     <script>
@@ -70,7 +71,7 @@
                     <li onclick="toggleDropdown()" class="user-navbar">
                         <div>
                             <span class="username username-medium">
-                                 
+                                <span id="navbar-username" class="username-text"></span>
                                 <span class="bg-icon spirit-digits-1 spirit-0">1</span>
                             </span>
                         </div> 
@@ -83,68 +84,60 @@
 
         <div class="nav-push"></div> 
         <div class="container">
-            <div class="banner banner-warning">PaulyRoom is under traffic and in maintance Which can do slowdowns <a href="/email/resend" style="">Were busy fixing everything</a>.</div> 
+            <div class="banner banner-warning">PaulyRoom is under traffic and in maintenance Which can do slowdowns <a href="/email/resend" style="">We're busy fixing everything</a>.</div> 
 
-            <!-- All your original content is kept exactly the same -->
             <div class="col-md-10 col-xs-12 col-md-offset-1">
                 <div class="row">
                     <div class="col-md-3 col-xs-12">
                         <div class="mb2">
-    <span class="h5">
-        Hi, <span id="username-display">User</span>
-    </span>
-</div>
+                            <span class="h5">
+                                Hi, <span id="username-display"></span>
+                            </span>
+                        </div>
                         <div class="shop-card">
                             <div class="shop-card-image">
                                 <img src="https://cdn.bopimo.com/renders/bopi/a20b2466-dd9a-4464-8424-f107a56b5d3a.png" class="w100"> 
-                                <div class="text-center pb1"><a href="/bopi" class="link">Avatar Creasion</a></div>
+                                <div class="text-center pb1"><a href="/bopi" class="link">Avatar Creation</a></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Rest of your content remains unchanged -->
-                </div>
+                    </div>
             </div>
         </div>
     </div>
 
 <script>
-    // Dynamic Username
-<span id="username-text" class="username-text"></span>
-    };
-
-    document.getElementById("username-text").textContent = user.username;
-    document.getElementById("username-display").textContent = user.username;
-</script>
-
-<script>
     function toggleDropdown() {
-        var elm = document.getElementsByClassName("navbar-dropdown")[0]
-        var icon = document.getElementsByClassName("dropdown-icon")[0]
-        elm.classList.toggle("hidden")
-        icon.classList.toggle("up")
+        var elm = document.getElementsByClassName("navbar-dropdown")[0];
+        var icon = document.getElementsByClassName("dropdown-icon")[0];
+        if (elm) elm.classList.toggle("hidden");
+        if (icon) icon.classList.toggle("up");
     }
+    
     function toggleNavbar() {
-        var navbar = document.getElementsByClassName("navbar")[0]
-        navbar.classList.toggle("open")
+        var navbar = document.getElementsByClassName("navbar")[0];
+        if (navbar) navbar.classList.toggle("open");
+    }
+
+    // Safely pull from localStorage on initialization or window refresh
+    document.addEventListener("DOMContentLoaded", function() {
+        const storedUsername = localStorage.getItem("username");
+        
+        if (storedUsername) {
+            const navUser = document.getElementById("navbar-username");
+            const displayUser = document.getElementById("username-display");
+            
+            if (navUser) navUser.textContent = storedUsername;
+            if (displayUser) displayUser.textContent = storedUsername;
+        }
+    });
+
+    function logout() {
+        localStorage.removeItem("username");
+        window.location.href = "https://paulyroom-pr.github.io/PaulyRoom/index.html";
     }
 </script>
 
 </body>
-<script>
-const username = localStorage.getItem("username") || "User";
-
-document.getElementById("username-text").textContent = username;
-document.getElementById("username-display").textContent = username;
-
-function logout() {
-    localStorage.removeItem("username");
-    window.location.href = "https://paulyroom-pr.github.io/PaulyRoom/index.html";
-}
-</script>
-function logout() {
-    localStorage.removeItem("username");
-    window.location.href = "https://paulyroom-pr.github.io/PaulyRoom/index.html";
-}
-</script>
 </html>
