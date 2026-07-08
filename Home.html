@@ -1,130 +1,25 @@
-<html class="">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <script>
-    let cdn = "https://cdn.bopimo.com";
-    function localFallback() {
-        document.querySelectorAll(`script[src^="${cdn}"]`).forEach((script) => {
-            let url = script.getAttribute('src')
-            let path = new URL(url).pathname.split('static')[1]
-            var script = document.createElement('script');
-            script.src = path;
-            document.head.appendChild(script);
-        })
-    }
-    function localCssFallback() {
-        document.querySelectorAll(`link[href^="${cdn}"]`).forEach((style) => {
-            let url = style.getAttribute('href')
-            let path = new URL(url).pathname.split('static')[1]
-            var link = document.createElement('link');
-            link.href = path
-            link.rel = 'stylesheet'
-            document.head.appendChild(link);
-        })
-    }
-    function localFallbacks() {
-        localFallback()
-        localCssFallback()
-    }
-    function cdnCheck() {
-        window.Vue || (localFallbacks())
-    }
-</script> 
-
-<link rel="stylesheet" href="https://cdn.bopimo.com/static/dist/css/main.b1e8e2d33d08a4745e862f94caa902f5.css">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://cdn.bopimo.com/static/dist/js/manifest.e4e0a03ba355db6dd283217de1fee883.js" crossorigin="anonymous" defer=""></script>
-<script src="https://cdn.bopimo.com/static/dist/js/vendor.620d5822184d7b9e3effd43cd040c482.js" crossorigin="anonymous" defer=""></script>
-<script src="https://cdn.bopimo.com/static/dist/js/babylonjs.722a531baab17568a354a9150d9c067e.js" crossorigin="anonymous" defer=""></script>
-<script src="https://cdn.bopimo.com/static/dist/js/main.c97b6336e39bb09a5d7cecfcad4886ad.js" crossorigin="anonymous" onerror="cdnCheck()" defer=""></script>
-
-<style>
-    :root { --accent: #ff8800; } /* Changed Purple to Orange */
-    .username-text, .username { color: var(--accent) !important; }
-    .bg-icon { background: var(--accent) !important; }
-    .shop-card.purple { border-color: var(--accent) !important; }
-</style>
-
-<title>Dashboard - PaulyRoom</title>
-
-<meta name="user" resource="{&quot;id&quot;:24212,&quot;username&quot;:&quot;SmallName&quot;,&quot;xp&quot;:0,&quot;level&quot;:1,&quot;online&quot;:true,&quot;url&quot;:&quot;https:\/\/www.bopimo.com\/users\/SmallName&quot;,&quot;bopi&quot;:{&quot;user_id&quot;:24212,&quot;uuid&quot;:&quot;a20b2466-dd9a-4464-8424-f107a56b5d3a&quot;,&quot;bopi_url&quot;:&quot;https:\/\/cdn.bopimo.com\/renders\/bopi\/a20b2466-dd9a-4464-8424-f107a56b5d3a.png&quot;,&quot;headshot_url&quot;:&quot;https:\/\/cdn.bopimo.com\/renders\/headshot\/a20b2466-dd9a-4464-8424-f107a56b5d3a.png&quot;},&quot;has_gold&quot;:false,&quot;gold_username&quot;:true,&quot;role&quot;:null,&quot;show_custom_themes&quot;:1,&quot;show_custom_usernames&quot;:1}">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaulyRoom - Home</title>
+    <link href="https://cdn.polytoria.com/static/app-DGvpBOdG.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://kit-pro.fontawesome.com/releases/v7.2.0/css/pro.min.css">
 </head>
 <body>
-    <div id="app" class="content">
-        <nav class="navbar">
-            <div class="container">
-                <ul class="left">
-                    <li class="logo"><a href="/dashboard"><img src="https://cdn.bopimo.com/static/images/logo.svg" alt="dashboard"></a> <div onclick="toggleNavbar()" class="hamburger-menu"><i class="fas fa-bars"></i></div></li> 
-                    <li><a href="/play">Play</a></li> 
-                    <li><a href="/shop">Shop</a></li> 
-                    <li><a href="/forums/">Forums</a></li> 
-                    <li><a href="/users">Users</a></li> 
-                    <li><a href="/download">Download</a></li> 
-                    <li><a href="/upgrade">Upgrade</a></li>
-                </ul> 
-                <ul class="right">
-                    <li class="user-coins unread"><a href="https://www.bopimo.com/users/SmallName/buddies/incoming"><div class="flex-align-middle v-popper--has-tooltip"><i class="fas fa-users"></i> <div>0</div></div></a></li> 
-                    <li class="user-coins unread"><a href="/chat/"><div class="flex-align-middle v-popper--has-tooltip"><i class="fas fa-envelope"></i> <div id="unread">0</div></div></a></li> 
-                    <li class="user-coins unread coins"><a href="https://www.bopimo.com/transactions"><div class="flex-align-middle v-popper--has-tooltip"><div class="b-coin"></div> <div>0</div></div></a></li> 
-                    <li onclick="toggleDropdown()" class="user-navbar">
-                        <div>
-                            <span class="username username-medium">
-                                <span id="username-text" class="username-text">SmallName</span> 
-                                <span class="bg-icon spirit-digits-1 spirit-0">1</span>
-                            </span>
-                        </div> 
-                        <div class="user-image"><img src="https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png" alt=""></div> 
-                        <div class="dropdown-icon"><i class="fas fa-chevron-down"></i></div>
-                    </li> 
-                </ul>
-            </div>
-        </nav> 
 
-        <div class="nav-push"></div> 
-        <div class="container">
-            <div class="banner banner-warning">PaulyRoom is under traffic and in maintance Which can do slowdowns <a href="/email/resend" style="">Were busy fixing everything</a>.</div> 
-
-            <!-- All your original content is kept exactly the same -->
-            <div class="col-md-10 col-xs-12 col-md-offset-1">
-                <div class="row">
-                    <div class="col-md-3 col-xs-12">
-                        <div class="mb2"><span class="h5 break-word">Hi, <span id="username-display">SmallName</span></span></div> 
-                        <div class="shop-card">
-                            <div class="shop-card-image">
-                                <img src="https://cdn.bopimo.com/renders/bopi/a20b2466-dd9a-4464-8424-f107a56b5d3a.png" class="w100"> 
-                                <div class="text-center pb1"><a href="/bopi" class="link">Customize</a></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Rest of your content remains unchanged -->
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="text-center mt-5">
+    <h1>Welcome back, <span id="username-display">SmallName</span>!</h1>
+    <button onclick="logout()" class="btn btn-danger mt-4">Logout</button>
+</div>
 
 <script>
-    // Dynamic Username
-    const user = {
-        username: "SmallName",   // ← Change this to the real username
-    };
-
-    document.getElementById("username-text").textContent = user.username;
-    document.getElementById("username-display").textContent = user.username;
-</script>
-
-<script>
-    function toggleDropdown() {
-        var elm = document.getElementsByClassName("navbar-dropdown")[0]
-        var icon = document.getElementsByClassName("dropdown-icon")[0]
-        elm.classList.toggle("hidden")
-        icon.classList.toggle("up")
+function logout() {
+    if (confirm("Are you sure you want to logout?")) {
+        window.location.href = "login.html";
     }
-    function toggleNavbar() {
-        var navbar = document.getElementsByClassName("navbar")[0]
-        navbar.classList.toggle("open")
-    }
+}
 </script>
 
 </body>
