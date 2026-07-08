@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html class="">
+<head>
+    <script>
+    let cdn = "https://cdn.bopimo.com";
+
+    function localFallback() {
+        document.querySelectorAll(`script[src^="${cdn}"]`).forEach((script) => {
+            let url = script.getAttribute('src')
+            let path = new URL(url).pathname.split('static')[1]
+            
+            var scriptEl = document.createElement('script');
+            scriptEl.onload = function () {
+                console.log('loading script')
+            };
+            scriptEl.src = path;
+            document.head.appendChild(scriptEl);
+        })
+    }
+
+    function localCssFallback() {
+        document.querySelectorAll(`link[href^="${cdn}"]`).forEach((style) => {
+            console.log(style)
+            let url = style.getAttribute('href')
+            let path = new URL(url).pathname.split('static')[1]
+
+            var link = document.createElement('link');
+            link.href = path
+            link.rel = 'stylesheet'
+            document.head.appendChild(link);
+        })
+    }
+
+    function localFallbacks() {
+        localFallback()
+        localCssFallback()
+    }
+
+    function cdnCheck() {
+        window.Vue || (localFallbacks())
+    }
+</script>        
+<link rel="stylesheet" href="https://cdn.bopimo.com/static/dist/css/main.b1e8e2d33d08a4745e862f94caa902f5.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+.VueCarousel-navigation-button[data-v-453ad8cd] {
+  position: absolute;
+  top: 50%;
+  box-sizing: border-box;
+  color: #000;
+  text-decoration: none;
+  appearance: none;
+  border: none;
+  background-color: transparent;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+}
+.VueCarousel-navigation-button[data-v-453ad8cd]:focus {
+  outline: 1px solid lightblue;
+}
+.VueCarousel-navigation-next[data-v-453ad8cd] {
+  right: 0;
+  transform: translateY(-50%) translateX(100%);
+  font-family: "system";
+}
+.VueCarousel-navigation-prev[data-v-453ad8cd] {
+  left: 0;
+  transform: translateY(-50%) translateX(-100%);
+  font-family: "system";
+}
+.VueCarousel-navigation--disabled[data-v-453ad8cd] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@font-face {
+  font-family: system;
+  font-style: normal;
+  font-weight: 300;
+  src: local(".SFNSText-Light"), local(".HelveticaNeueDeskInterface-Light"),
+    local(".LucidaGrandeUI"), local("Ubuntu Light"), local("Segoe UI Symbol"),
+    local("Roboto-Light"), local("DroidSans"), local("Tahoma");
+}
+
+/* User Search Styling */
+.search-users-container {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+}
+.search-users-input {
+    flex-grow: 1;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.95rem;
+}
+.search-users-btn {
+    background: #ff8800;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.search-users-btn:hover {
+    filter: brightness(0.9);
+}
+.search-error {
+    color: #d9534f;
+    font-size: 0.85rem;
+    margin-top: -12px;
+    margin-bottom: 15px;
+    display: none;
+    font-weight: bold;
+}
+</style>
+<title id="page-title">Bopimo!</title>
+</head>
+<body>
+    <div id="app" class="content">
+        <nav class="navbar">
+            <div class="container">
+                <ul class="left">
+                    <li class="logo"><a href="/dashboard"><img src="https://cdn.bopimo.com/static/images/logo.svg" alt="dashboard"></a> <div onclick="toggleNavbar()" class="hamburger-menu"><i class="fas fa-bars"></i></div></li> 
+                    <li><a href="/play">Play</a></li> 
+                    <li><a href="/shop">Shop</a></li> 
+                    <li><a href="/forums/">Forums</a></li> 
+                    <li><a href="/users">Users</a></li> 
+                    <li><a href="/download">Download</a></li> 
+                    <li><a href="/upgrade">Upgrade</a></li>
+                </ul> 
+                <ul class="right">
+                    <li class="user-coins unread"><a id="buddies-nav-link" href="#"><div class="flex-align-middle v-popper--has-tooltip"><i class="fas fa-users"></i> <div>0</div></div></a></li> 
+                    <li class="user-coins unread"><a href="/chat/"><div class="flex-align-middle v-popper--has-tooltip"><i class="fas fa-envelope"></i> <div id="unread">0</div></div></a></li> 
+                    <li class="user-coins unread coins"><a href="/transactions"><div class="flex-align-middle v-popper--has-tooltip"><div class="b-coin"></div> <div>0</div></div></a></li> 
+                    <li onclick="window.toggleDropdown()" class="user-navbar">
+                        <div>
+                            <span class="username username-medium">
+                                <span class="username-text" id="nav-username-display">Guest</span> 
+                                <span class="bg-icon spirit-digits-1 spirit-0" id="nav-level-badge">1</span>
+                            </span>
+                        </div> 
+                        <div class="user-image"><img id="nav-headshot-img" src="https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png" alt=""></div> 
+                        <div class="dropdown-icon"><i class="fas fa-chevron-down"></i></div>
+                    </li>
+                    <ul class="navbar-dropdown hidden">
+                        <li class="xp">
+                            <div class="progress"><span id="dropdown-level-text">Spirit 1</span> <span class="float-right" id="dropdown-xp-text">0/150 XP</span></div> 
+                            <div class="progbar"><div class="bar bar-spirit" id="dropdown-xp-bar" style="width: 0%;"></div></div>
+                        </li> 
+                        <li><a href="#" id="nav-profile-link">Profile</a></li> 
+                        <li><a href="/levels">Your levels</a></li> 
+                        <li><a href="/clears">Your clears</a></li> 
+                        <li><a href="/ratings">Your ratings</a></li> 
+                        <li><a href="/spirit">Spirit</a></li> 
+                        <li><a href="/inventory">Inventory</a></li> 
+                        <li><a href="/bopi">Customize</a></li> 
+                        <li><a href="/achievements">Achievements</a></li> 
+                        <li><a href="/transactions">Transactions</a></li> 
+                        <li><a href="/settings/account">Settings</a></li> 
+                        <li class="logout"><a href="#" id="nav-logout-link">Logout</a></li>
+                    </ul>
+                </ul>
+            </div>
+        </nav> 
+        
+        <div class="nav-push"></div> 
+        
+        <div class="container">
+            <div class="banner banner-warning">Your account will be limited until you verify your email address. If you can't find the e-mail check your spam folder or <a href="/email/resend" style="text-decoration: underline;">click here to resend</a>.</div> 
+            
+            <div class="col-md-10 col-md-offset-1 w100">
+                
+                <div class="search-users-container">
+                    <input type="text" id="user-search-input" class="search-users-input" placeholder="Search users by exact username...">
+                    <button class="search-users-btn" id="search-users-btn"><i class="fas fa-search"></i> Search</button>
+                </div>
+                <div id="search-error-msg" class="search-error">No profile found matches that username. Please verify spelling!</div>
+
+                <div class="row">
+                    <div class="col-md-4 col-xs-12">
+                        <div class="mb1">
+                            <span class="h3 dynamic-color">
+                                <span class="username username-wrap username-large">
+                                    <span class="username-text" id="profile-username-display">Loading...</span> 
+                                    <span class="status-bubble" id="profile-online-bubble"></span> 
+                                    <span class="bg-icon spirit-digits-1 spirit-0 username-wrap" id="profile-level-badge">1</span> 
+                                    <span class="font-size-1"><span class="icon-holder popover-icon"><i class="fas fa-ellipsis-v icon"></i></span></span>
+                                </span>
+                            </span>
+                        </div> 
+                        <div class="shop-card">
+                            <div class="card-image text-center">
+                                <img id="profile-fullbody-img" src="https://cdn.bopimo.com/renders/bopi/a20b2466-dd9a-4464-8424-f107a56b5d3a.png" class="w100">
+                            </div>
+                        </div> 
+                        <div class="h3 dynamic-color">Statistics</div> 
+                        <div class="shop-card">
+                            <div class="card-content">
+                                <div>Joined: <b id="stat-joined-date">-</b></div> 
+                                <div>Last Online: <b id="stat-last-online">-</b></div> 
+                                <div>Total Plays: <b id="stat-total-plays">0</b></div> 
+                                <div>Spirit: <b id="stat-spirit-level">1</b></div> 
+                                <div>Clears: <b id="stat-clears-count">0</b></div> 
+                                <div>XP: <b id="stat-xp-fraction">0/150</b></div> 
+                                <div>Achievements: <b id="stat-achievements-count">0</b></div> 
+                                <div>Ratings: <b id="stat-ratings-count">0</b></div> 
+                                <div>Rating average: <b id="stat-rating-avg">0/5</b></div>
+                            </div>
+                        </div>
+                    </div> 
+                    
+                    <div class="col-md-8 col-xs-12">
+                        <div class="h3 dynamic-color">Comments</div> 
+                        <div>
+                            <div class="shop-card comment-container">
+                                <div class="card-section write-comment">
+                                    <div class="comment-card-image">
+                                        <img id="comment-box-avatar" src="https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png" alt="">
+                                    </div> 
+                                    <div class="input-group h100">
+                                        <textarea type="text" id="comment-textarea" name="body" placeholder="Type here" class="form-input textarea-vertical"></textarea> 
+                                        <button class="search-button" id="post-comment-btn"><i class="fas fa-arrow-right"></i></button>
+                                    </div>
+                                </div>  
+                                <div class="p2" id="comments-wrapper-div">
+                                    <div class="error-message small-icon">
+                                        <div class="icon"><div class="b-icon b-sad xxl"></div></div> 
+                                        <div class="message">No comments found</div>
+                                    </div>
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, collection, doc, getDoc, setDoc, query, where, getDocs, addDoc, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBy431WZJp9k4DLL8AclwqU8G3QhVKJ3Ws",
+      authDomain: "paulyroom-dc99e.firebaseapp.com",
+      projectId: "paulyroom-dc99e",
+      storageBucket: "paulyroom-dc99e.firebasestorage.app",
+      messagingSenderId: "676053619588",
+      appId: "1:676053619588:web:2abffee0cf9295031303d1",
+      measurementId: "G-YP6F27NP9B"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let mainSessionUsername = "";
+    let mainSessionUid = "";
+    let displayedProfileUser = "";
+    let commentsUnsubscribe = null;
+
+    function getSavedLocalStorageUsername() {
+        let directName = localStorage.getItem("username") || localStorage.getItem("user") || localStorage.getItem("current_user");
+        if (directName && directName.trim() !== "" && !directName.includes("{")) return directName.trim();
+        return null;
+    }
+
+    // --- CRITICAL PROFILE FIX: PREVENT OVERWRITING VALID USERS ---
+    onAuthStateChanged(auth, async (firebaseUser) => {
+        let finalUsername = "";
+        let foundUserData = null;
+
+        if (firebaseUser) {
+            mainSessionUid = firebaseUser.uid;
+            try {
+                // Step 1: Look up data directly by Auth User ID Document
+                const userDocRef = doc(db, "users", firebaseUser.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                
+                if (userDocSnap.exists()) {
+                    foundUserData = userDocSnap.data();
+                    if (foundUserData.username) finalUsername = foundUserData.username.trim();
+                } else {
+                    // Step 2: Look up data inside user collection using UID field query
+                    const usersRef = collection(db, "users");
+                    const uidQuery = query(usersRef, where("uid", "==", firebaseUser.uid));
+                    const uidSnap = await getDocs(uidQuery);
+                    if (!uidSnap.empty) {
+                        foundUserData = uidSnap.docs[0].data();
+                        finalUsername = foundUserData.username.trim();
+                    } else if (firebaseUser.email) {
+                        // Step 3: Fallback query via registered email field
+                        const emailQuery = query(usersRef, where("email", "==", firebaseUser.email));
+                        const emailSnap = await getDocs(emailQuery);
+                        if (!emailSnap.empty) {
+                            foundUserData = emailSnap.docs[0].data();
+                            finalUsername = foundUserData.username.trim();
+                        }
+                    }
+                }
+            } catch (dbErr) {
+                console.warn("Auth initialization database sweep failed:", dbErr);
+            }
+
+            if (!finalUsername && firebaseUser.displayName) {
+                finalUsername = firebaseUser.displayName.trim();
+            }
+        }
+
+        if (!finalUsername) {
+            finalUsername = getSavedLocalStorageUsername();
+        }
+
+        if (!finalUsername) {
+            let randomId = Math.floor(1000 + Math.random() * 9000); 
+            finalUsername = "Guest" + randomId;
+        }
+
+        localStorage.setItem("username", finalUsername);
+        mainSessionUsername = finalUsername;
+        
+        setupNavbarIdentity();
+
+        // If we found database stats, map them to UI immediately instead of making a new empty one
+        if (foundUserData) {
+            renderProfileUI(foundUserData);
+        } else {
+            loadUserProfileData(mainSessionUsername);
+        }
+    });
+
+    // Action assignments
+    document.getElementById("search-users-btn").addEventListener("click", executeUserSearch);
+    document.getElementById("post-comment-btn").addEventListener("click", postProfileComment);
+    document.getElementById("nav-profile-link").addEventListener("click", (e) => { e.preventDefault(); loadMainUserProfile(); });
+    document.getElementById("nav-logout-link").addEventListener("click", (e) => { e.preventDefault(); logoutUser(); });
+    document.getElementById("user-search-input").addEventListener("keypress", function(e) {
+        if(e.key === 'Enter') executeUserSearch();
+    });
+
+    function setupNavbarIdentity() {
+        document.getElementById("nav-username-display").textContent = mainSessionUsername;
+        document.getElementById("buddies-nav-link").setAttribute("href", `https://www.bopimo.com/users/${mainSessionUsername}/buddies/incoming`);
+        
+        const defaultHeadshot = "https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png";
+        document.getElementById("nav-headshot-img").src = defaultHeadshot;
+        document.getElementById("comment-box-avatar").src = defaultHeadshot;
+    }
+
+    async function loadUserProfileData(usernameKey) {
+        document.getElementById("search-error-msg").style.display = "none";
+        const cleanQuery = usernameKey.trim().toLowerCase();
+        
+        try {
+            const usersRef = collection(db, "users");
+            
+            // Query match on exact text username field
+            const q = query(usersRef, where("username_lowercase", "==", cleanQuery));
+            const querySnapshot = await getDocs(q);
+            
+            if(!querySnapshot.empty) {
+                renderProfileUI(querySnapshot.docs[0].data());
+                return;
+            }
+
+            // Document string ID lookup fallback
+            const directDocSnap = await getDoc(doc(db, "users", cleanQuery));
+            if (directDocSnap.exists()) {
+                renderProfileUI(directDocSnap.data());
+                return;
+            }
+
+            // Safe guard: Create default profile ONLY if user has absolutely no existing record
+            if(cleanQuery === mainSessionUsername.toLowerCase()) {
+                const freshMockRecord = {
+                    uid: mainSessionUid || "",
+                    username: mainSessionUsername,
+                    username_lowercase: mainSessionUsername.toLowerCase(),
+                    level: 1,
+                    xp: 24,
+                    maxXp: 150,
+                    online: true,
+                    joinedDate: "Jul 08th, 2026",
+                    lastOnline: "Jul 08th, 2026",
+                    totalPlays: 0,
+                    clears: 0,
+                    achievements: 0,
+                    ratings: 0,
+                    ratingAvg: "0/5",
+                    fullBodyUrl: "https://cdn.bopimo.com/renders/bopi/a20b2466-dd9a-4464-8424-f107a56b5d3a.png",
+                    headshotUrl: "https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png"
+                };
+                
+                // Keep file synced under your explicit Auth ID 
+                if (mainSessionUid) {
+                    await setDoc(doc(db, "users", mainSessionUid), freshMockRecord);
+                } else {
+                    await setDoc(doc(db, "users", mainSessionUsername.toLowerCase()), freshMockRecord);
+                }
+                renderProfileUI(freshMockRecord);
+            } else {
+                document.getElementById("search-error-msg").style.display = "block";
+            }
+        } catch(err) {
+            console.error("Firestore dynamic data extraction fail:", err);
+        }
+    }
+
+    function renderProfileUI(data) {
+        if (!data || !data.username) return;
+        displayedProfileUser = data.username;
+        
+        document.getElementById("page-title").textContent = `${data.username} - Bopimo!`;
+        document.getElementById("profile-username-display").textContent = data.username;
+        document.getElementById("profile-level-badge").textContent = data.level || 1;
+        document.getElementById("stat-spirit-level").textContent = data.level || 1;
+        
+        const bubble = document.getElementById("profile-online-bubble");
+        bubble.className = data.online ? "status-bubble active" : "status-bubble";
+
+        document.getElementById("profile-fullbody-img").src = data.fullBodyUrl || "https://cdn.bopimo.com/renders/bopi/a20b2466-dd9a-4464-8424-f107a56b5d3a.png";
+        
+        document.getElementById("stat-joined-date").textContent = data.joinedDate || "Jul 08th, 2026";
+        document.getElementById("stat-last-online").textContent = data.lastOnline || "Jul 08th, 2026";
+        document.getElementById("stat-total-plays").textContent = data.totalPlays !== undefined ? data.totalPlays : "0";
+        document.getElementById("stat-clears-count").textContent = data.clears || "0";
+        document.getElementById("stat-xp-fraction").textContent = `${data.xp || 0}/${data.maxXp || 150}`;
+        document.getElementById("stat-achievements-count").textContent = data.achievements || "0";
+        document.getElementById("stat-ratings-count").textContent = data.ratings || "0";
+        document.getElementById("stat-rating-avg").textContent = data.ratingAvg || "0/5";
+
+        if(data.username.toLowerCase() === mainSessionUsername.toLowerCase()) {
+            document.getElementById("nav-level-badge").textContent = data.level || 1;
+            document.getElementById("dropdown-level-text").textContent = `Spirit ${data.level || 1}`;
+            document.getElementById("dropdown-xp-text").textContent = `${data.xp || 0}/${data.maxXp || 150} XP`;
+            
+            let pct = Math.floor(((data.xp || 0) / (data.maxXp || 150)) * 100);
+            document.getElementById("dropdown-xp-bar").style.width = pct + "%";
+            if(data.headshotUrl) {
+                document.getElementById("nav-headshot-img").src = data.headshotUrl;
+                document.getElementById("comment-box-avatar").src = data.headshotUrl;
+            }
+        }
+        
+        loadProfileCommentsTimeline();
+    }
+
+    function executeUserSearch() {
+        const queryVal = document.getElementById("user-search-input").value.trim();
+        if(queryVal.length > 0) {
+            loadUserProfileData(queryVal);
+        }
+    }
+
+    function loadMainUserProfile() {
+        loadUserProfileData(mainSessionUsername);
+    }
+
+    function loadProfileCommentsTimeline() {
+        if (commentsUnsubscribe) commentsUnsubscribe();
+
+        const commentsRef = collection(db, "users", displayedProfileUser.toLowerCase(), "comments");
+        const q = query(commentsRef, orderBy("timestamp", "desc"));
+
+        commentsUnsubscribe = onSnapshot(q, (snapshot) => {
+              const box = document.getElementById("comments-wrapper-div");
+              if(snapshot.empty) {
+                  box.innerHTML = `
+                    <div class="error-message small-icon">
+                        <div class="icon"><div class="b-icon b-sad xxl"></div></div> 
+                        <div class="message">No comments found</div>
+                    </div>`;
+                  return;
+              }
+              
+              let htmlBlock = "";
+              snapshot.forEach(doc => {
+                  const comm = doc.data();
+                  htmlBlock += `
+                    <div style="display:flex; gap:12px; border-bottom:1px solid #eee; padding: 10px 0; align-items:flex-start;">
+                        <div style="width:45px; height:45px; background:#f4f4f4; border-radius:4px; overflow:hidden;">
+                            <img src="https://cdn.bopimo.com/renders/headshot/a20b2466-dd9a-4464-8424-f107a56b5d3a.png" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                        <div style="flex-grow:1;">
+                            <div style="font-weight:bold; color:#ff8800; font-size:0.9rem;">${escapeHtml(comm.author)}</div>
+                            <div style="color:#444; font-size:0.88rem; margin-top:2px;">${escapeHtml(comm.text)}</div>
+                        </div>
+                    </div>`;
+              });
+              box.innerHTML = htmlBlock;
+          });
+    }
+
+    async function postProfileComment() {
+        const txtInput = document.getElementById("comment-textarea");
+        const val = txtInput.value.trim();
+        if(val.length === 0) return;
+
+        try {
+            const commentsRef = collection(db, "users", displayedProfileUser.toLowerCase(), "comments");
+            await addDoc(commentsRef, {
+                author: mainSessionUsername,
+                text: val,
+                timestamp: serverTimestamp()
+            });
+            txtInput.value = "";
+        } catch(e) { console.error("Could not post comment:", e); }
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+    }
+
+    async function logoutUser() {
+        try { await signOut(auth); } catch(e) {}
+        localStorage.clear();
+        window.location.reload();
+    }
+</script>
+
+<script type="text/javascript">
+    window.toggleDropdown = function() {
+        var elm = document.getElementsByClassName("navbar-dropdown")[0];
+        if (elm) elm.classList.toggle("hidden");
+    }
+    window.toggleNavbar = function() {
+        var navbar = document.getElementsByClassName("navbar")[0];
+        if (navbar) navbar.classList.toggle("open");
+    }
+</script>
+</body>
+</html>
