@@ -110,8 +110,7 @@
 
 <script>
     // Dynamic Username
-    const user = {
-        username: "<span id="username-text" class="username-text">User</span>",   // ← Change this to the real username
+<span id="username-text" class="username-text">User</span>
     };
 
     document.getElementById("username-text").textContent = user.username;
@@ -133,13 +132,16 @@
 
 </body>
 <script>
-const username = localStorage.getItem("username");
+const username = localStorage.getItem("username") || "User";
 
-if (username) {
-    document.getElementById("username-text").textContent = username;
-    document.getElementById("username-display").textContent = username;
+document.getElementById("username-text").textContent = username;
+document.getElementById("username-display").textContent = username;
+
+function logout() {
+    localStorage.removeItem("username");
+    window.location.href = "https://paulyroom-pr.github.io/PaulyRoom/index.html";
 }
-
+</script>
 function logout() {
     localStorage.removeItem("username");
     window.location.href = "https://paulyroom-pr.github.io/PaulyRoom/index.html";
